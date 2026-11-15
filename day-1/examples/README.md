@@ -39,6 +39,20 @@ python day-1/examples/04_segmentation/01_segmentation_example.py
 Lab prerequisite (full pipeline): `python day-1/step01_sessionize.py`  
 These examples use **toy data** and do not need the full CSV.
 
+## Where is the input?
+
+The examples **do not** read `day-1/data/web_events.csv`. Inputs are defined **in code**:
+
+| Example folder | Input location |
+|----------------|----------------|
+| `01_journey/` | `examples/_shared/toy_sessions.py` → `load_toy_events()` (4 hand-built sessions) |
+| `02_state_modeling/` | Same `toy_sessions.py` |
+| `03_feature_engineering/` | Same `toy_sessions.py` |
+| `04_segmentation/` | Built inside `04_segmentation/01_segmentation_example.py` → `toy_audience()` (12 synthetic cookies) |
+
+- Shared clickstream toy data: **`day-1/examples/_shared/toy_sessions.py`**
+- Full lab CSVs under `day-1/data/` are only for `step01`…`step05`, not these demos
+
 ## Map to lab steps
 
 | Learning folder | Lab step | Algorithms |
