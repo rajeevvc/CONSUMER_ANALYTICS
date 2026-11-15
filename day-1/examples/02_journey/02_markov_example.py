@@ -58,35 +58,65 @@ def fit_markov(events: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     return matrix.round(3), dropoff
 
 
+def _section(title: str) -> None:
+    print("\n" + "=" * 72)
+    print(title)
+    print("=" * 72)
+
+
 def main() -> None:
-    print("=" * 60)
-    print("MARKOV — next-stage probabilities (+ exit)")
-    print("=" * 60)
+    _section("MARKOV — next-stage probabilities (+ exit)")
+    print("Goal: estimate P(next stage | current stage), including leaving the visit.")
     describe_sessions()
     events = load_toy_events()
 
-    print("\nWhat the algorithm does")
+    print("\nAlgorithm steps")
     print("  1. Walk each session in time order as a sequence of STAGES")
     print("  2. Count consecutive pairs: landing→scroll, scroll→engaged, …")
     print("  3. After the LAST event of a session, add stage→exit")
     print("  4. Row-normalize counts → P(next | current)")
 
-    print("\nBy-hand check (session endings → exit)")
-    print("  S1 ends on landing  → landing→exit")
-    print("  S2 ends on engaged  → engaged→exit")
-    print("  S3 ends on intent   → intent→exit")
-    print("  S4 ends on subscription → subscription→exit")
-
-    print("\nExample transitions inside S4")
-    print("  landing→scroll→engaged→intent→deep→deep→subscription")
+    _section("OUTPUT 1 — Stage sequence per session")
+    for sid, part in events.sort_values(["session_idx", "timestamp"]).groupby("session_idx", sort=True):
+        seq = " → ".join(part["stage"].tolist()) + " → exit"
+        print(f"  S{sid}: {seq}")
+    print("\nSession endings → exit edges")
+    print("  S1 ends on landing       → landing→exit")
+    print("  S2 ends on engaged       → engaged→exit")
+    print("  S3 ends on intent        → intent→exit")
+    print("  S4 ends on subscription  → subscription→exit")
 
     matrix, dropoff = fit_markov(events)
-    print("\nTransition matrix (rows = from, cols = to)")
+    _section("OUTPUT 2 — Transition matrix")
+    print("How to read: each ROW is the current stage; cells are P(go to column | row).")
+    print("Rows roughly sum to 1.0 (including exit).")
+    print("\nFull matrix")
     print(matrix.to_string())
-    print("\nDrop-off (exit probability by stage)")
-    print(dropoff.to_string(index=False))
+    print("\nHighlighted cells")
+    print(f"  P(scroll | landing) = {matrix.loc['landing', 'scroll']}  (3 of 4 landing steps go to scroll)")
+    print(f"  P(exit | landing)   = {matrix.loc['landing', 'exit']}  (S1 bounces)")
+    print(f"  P(deep | intent)    = {matrix.loc['intent', 'deep']}  (intent rarely becomes checkout)")
 
-    print("\nTeaching takeaway")
+    _section("OUTPUT 3 — Drop-off table")
+    print("Column meanings")
+    print("  stage             current stage")
+    print("  transitions       outbound counts from this stage (incl. exit)")
+    print("  exits             how often the visit ended here")
+    print("  exit_probability  P(exit | stage)")
+    print("\nFull table")
+    print(dropoff.to_string(index=False))
+    print("\nRow-by-row")
+    for row in dropoff.itertuples(index=False):
+        if row.transitions == 0:
+            continue
+        print(f"  {row.stage}: {row.exits}/{row.transitions} exits → P(exit)={row.exit_probability}")
+
+    _section("OUTPUT 4 — Acceptance checks")
+    print(f"  landing→scroll = {matrix.loc['landing', 'scroll']}  (expect 0.75)")
+    print(f"  landing→exit   = {matrix.loc['landing', 'exit']}  (expect 0.25)")
+    print(f"  engaged→exit   = {matrix.loc['engaged', 'exit']}  (expect ~0.333)")
+
+    _section("Teaching takeaway")
     print("  Markov answers: 'Right after this stage, what usually happens next?'")
     print("  Different from Funnel (Funnel = ever reached; Markov = next step).")
 

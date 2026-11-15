@@ -96,14 +96,19 @@ def user_features(sessions: pd.DataFrame) -> pd.DataFrame:
     return features.reset_index()
 
 
+def _section(title: str) -> None:
+    print("\n" + "=" * 72)
+    print(title)
+    print("=" * 72)
+
+
 def main() -> None:
-    print("=" * 60)
-    print("FEATURE ENGINEERING — session → user")
-    print("=" * 60)
+    _section("FEATURE ENGINEERING — session → user")
+    print("Goal: turn event streams into numeric vectors for segmentation.")
     describe_sessions()
     events = load_toy_events()
 
-    print("\nWhat the algorithm / transform does")
+    print("\nTransform steps")
     print("  1. Build one SESSION row: duration, furthest stage, event counts, converted")
     print("  2. Roll up to one USER (cookie) row:")
     print("       frequency  = n_sessions, days_active")
@@ -114,7 +119,14 @@ def main() -> None:
     sessions = session_features(events)
     users = user_features(sessions)
 
-    print("\nSession features")
+    _section("OUTPUT 1 — Session features")
+    print("Column meanings")
+    print("  session_idx / anonymous_id  visit id and cookie")
+    print("  duration_sec                last_ts − first_ts inside the session")
+    print("  n_behavior_events           count of browsing events in the visit")
+    print("  furthest_stage              deepest funnel stage touched")
+    print("  converted                   1 if subscription/payment outcome occurred")
+    print("  page_view / scroll / …      raw event counts")
     cols = [
         "session_idx",
         "anonymous_id",
@@ -126,9 +138,22 @@ def main() -> None:
         "scroll",
         "engaged_read",
     ]
+    print("\nFull session table")
     print(sessions[cols].to_string(index=False))
+    print("\nRow-by-row")
+    for row in sessions.itertuples(index=False):
+        print(f"  S{row.session_idx} ({row.anonymous_id}): "
+              f"duration={row.duration_sec:.0f}s, events={row.n_behavior_events}, "
+              f"furthest={row.furthest_stage}, converted={int(row.converted)}")
 
-    print("\nUser features (cookie grain)")
+    _section("OUTPUT 2 — User features (cookie grain)")
+    print("Column meanings")
+    print("  n_sessions            visits for this cookie")
+    print("  mean_duration_sec     average session length")
+    print("  mean_furthest_rank    average depth (landing=1 … deep=5)")
+    print("  share_intent/deep     fraction of sessions that reached those stages")
+    print("  *_rate                event mix / outcome rates across sessions")
+    print("  recency_days          days since last session (0 in single-day toy)")
     preview = [
         "anonymous_id",
         "n_sessions",
@@ -140,14 +165,25 @@ def main() -> None:
         "conversion_rate",
         "recency_days",
     ]
+    print("\nFull user table")
     print(users[preview].round(3).to_string(index=False))
+    print("\nRow-by-row")
+    for row in users.itertuples(index=False):
+        print(f"  {row.anonymous_id}: sessions={row.n_sessions}, "
+              f"mean_depth={row.mean_furthest_rank:.1f}, "
+              f"share_deep={row.share_deep:.2f}, "
+              f"conversion_rate={row.conversion_rate:.2f}")
 
-    print("\nBy-hand check")
+    _section("OUTPUT 3 — Acceptance checks")
     print("  Each toy cookie has 1 session → n_sessions = 1")
-    print("  Only S4 converted → A0004 conversion_rate = 1.0")
-    print("  A0001 furthest landing (rank 1); A0004 reaches deep (rank 5)")
+    print(f"  n_sessions unique values = {sorted(users['n_sessions'].unique().tolist())}")
+    a4 = users.loc[users["anonymous_id"] == "A0004"].iloc[0]
+    a1 = users.loc[users["anonymous_id"] == "A0001"].iloc[0]
+    print(f"  A0004 conversion_rate = {a4.conversion_rate}  (expect 1.0)")
+    print(f"  A0001 mean_furthest_rank = {a1.mean_furthest_rank}  (expect 1.0 landing)")
+    print(f"  A0004 mean_furthest_rank = {a4.mean_furthest_rank}  (expect 5.0 deep)")
 
-    print("\nTeaching takeaway")
+    _section("Teaching takeaway")
     print("  Features bridge visits → audience vectors for segmentation.")
 
 

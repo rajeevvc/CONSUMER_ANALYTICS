@@ -88,33 +88,64 @@ def journey_variants(events: pd.DataFrame) -> pd.DataFrame:
     return paths
 
 
+def _section(title: str) -> None:
+    print("\n" + "=" * 72)
+    print(title)
+    print("=" * 72)
+
+
 def main() -> None:
-    print("=" * 60)
-    print("DFG — event-level process map")
-    print("=" * 60)
+    _section("DFG — event-level process map")
+    print("Goal: show the real click-to-click graph (not stage tags).")
     describe_sessions()
     events = load_toy_events()
 
-    print("\nWhat the algorithm does")
+    print("\nAlgorithm steps")
     print("  1. Use raw EVENT NAMES (not stage tags)")
     print("  2. Add START→first and last→END for every session")
     print("  3. Count every consecutive event pair inside a session")
-    print("  4. Optional: list path variants (journeys)")
+    print("  4. List path variants (journeys)")
 
-    print("\nBy-hand check")
-    print("  Every session starts with page_view → four START→page_view edges")
-    print("  page_view→scroll appears in S2,S3,S4 (not S1)")
-    print("  S1 is simply: START → page_view → END")
+    _section("OUTPUT 1 — Input event names by session")
+    for sid, part in events.sort_values(["session_idx", "timestamp"]).groupby("session_idx", sort=True):
+        print(f"  S{sid}: {' > '.join(part['event_name'].tolist())}")
 
     edges = directly_follows(events)
+    _section("OUTPUT 2 — Directly-follows edges (raw pairs)")
+    print("Each row is one observed edge instance (before aggregation).")
+    print(edges.to_string(index=False))
+    print(f"\nTotal edge instances: {len(edges)} "
+          f"(4 START + internal follows + 4 END)")
+
     table = edge_table(edges)
-    print("\nStrongest follows")
-    print(table.head(12).to_string(index=False))
+    _section("OUTPUT 3 — Aggregated edge table")
+    print("Column meanings")
+    print("  from_activity / to_activity  event pair (or START/END)")
+    print("  count                        how many times this pair occurred")
+    print("  probability                  share among outbound edges from from_activity")
+    print("\nFull table (sorted by count)")
+    print(table.to_string(index=False))
+    print("\nHighlighted edges")
+    start_pv = table.loc[table["from_activity"].eq("START") & table["to_activity"].eq("page_view")].iloc[0]
+    print(f"  START→page_view count={start_pv['count']} P={start_pv['probability']}  (every session starts here)")
+    pv_scroll = table.loc[table["from_activity"].eq("page_view") & table["to_activity"].eq("scroll")]
+    if len(pv_scroll):
+        row = pv_scroll.iloc[0]
+        print(f"  page_view→scroll count={row['count']} P={row['probability']}  (S2,S3,S4; not bounce S1)")
 
-    print("\nJourney variants")
-    print(journey_variants(events).to_string(index=False))
+    variants = journey_variants(events)
+    _section("OUTPUT 4 — Journey variants")
+    print("One collapsed path per session (consecutive repeats would merge if present).")
+    print(variants.to_string(index=False))
+    print("\nRow-by-row")
+    for row in variants.itertuples(index=False):
+        print(f"  S{row.session_idx}: {row.journey}")
 
-    print("\nTeaching takeaway")
+    _section("OUTPUT 5 — Acceptance checks")
+    print(f"  START→page_view count = {int(start_pv['count'])}  (expect 4)")
+    print(f"  journey variants      = {len(variants)}  (expect 4)")
+
+    _section("Teaching takeaway")
     print("  DFG answers: 'What exact click paths happen?'")
     print("  Funnel/Markov use stages; DFG keeps event detail.")
 

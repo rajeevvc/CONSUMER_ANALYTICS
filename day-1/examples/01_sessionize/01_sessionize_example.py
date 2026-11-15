@@ -124,35 +124,128 @@ def attach_conversion_label(sessions: pd.DataFrame, events: pd.DataFrame) -> pd.
     return out
 
 
+def _section(title: str) -> None:
+    print("\n" + "=" * 72)
+    print(title)
+    print("=" * 72)
+
+
+def _explain_event_columns() -> None:
+    print("\nColumn meanings (event output)")
+    print("  anonymous_id   cookie / visitor ID (long-lived)")
+    print("  timestamp      when the event happened")
+    print("  event_name     raw click / action")
+    print("  gap_seconds    seconds since THIS cookie's previous kept event")
+    print("                 NaN = first event for that cookie")
+    print("  session_id     visit ID assigned by the 30-minute rule")
+    print("  stage          funnel tag for this event (landing…deep / subscription)")
+    print("  is_conversion  True only for register_complete / subscription_active")
+
+
+def _explain_session_columns() -> None:
+    print("\nColumn meanings (session summary output)")
+    print("  session_id          visit ID")
+    print("  anonymous_id        cookie that owned the visit")
+    print("  session_start       first event time in the visit")
+    print("  duration_sec        first→last BEHAVIOR event span (excludes conversion-only)")
+    print("  n_behavior_events   count of non-conversion events in the visit")
+    print("  furthest_stage      deepest engagement stage reached in the visit")
+    print("  converted           True if cookie's first conversion is within 7 days of start")
+    print("  already_converted   True if a conversion already happened before this visit")
+
+
+def _walk_event_rows(events: pd.DataFrame) -> None:
+    print("\nRow-by-row reading of sessionized events")
+    for cookie, part in events.groupby("anonymous_id", sort=False):
+        print(f"\n  Cookie {cookie}")
+        prev_session = None
+        for row in part.itertuples(index=False):
+            gap = row.gap_seconds
+            if pd.isna(gap):
+                gap_txt = "NaN (first event for this cookie → always starts a session)"
+                decision = "NEW SESSION"
+            elif gap > SESSION_GAP_SECONDS:
+                gap_txt = f"{gap:.0f}s > {SESSION_GAP_SECONDS}s (30 min) → idle too long"
+                decision = "NEW SESSION"
+            else:
+                gap_txt = f"{gap:.0f}s ≤ {SESSION_GAP_SECONDS}s → still same visit"
+                decision = "same session"
+            stage_note = f"stage={row.stage}"
+            if row.is_conversion:
+                stage_note += " | CONVERSION outcome (not browsing depth)"
+            print(
+                f"    {row.timestamp}  {row.event_name:<20}  "
+                f"gap={gap_txt}"
+            )
+            print(f"      → {decision}: {row.session_id}  ({stage_note})")
+            if prev_session is not None and row.session_id != prev_session:
+                print(f"      ★ session changed: {prev_session} → {row.session_id}")
+            prev_session = row.session_id
+
+
+def _walk_session_rows(sessions: pd.DataFrame) -> None:
+    print("\nRow-by-row reading of session summaries")
+    for row in sessions.itertuples(index=False):
+        print(f"\n  {row.session_id}  cookie={row.anonymous_id}")
+        print(f"    started          {row.session_start}")
+        print(f"    duration_sec     {row.duration_sec:.0f}s of active behavior")
+        print(f"    n_behavior_events {int(row.n_behavior_events)}")
+        print(f"    furthest_stage   {row.furthest_stage} (rank {int(row.furthest_rank)})")
+        print(f"    device/referrer  {row.device_type} / {row.referrer}")
+        print(f"    converted        {bool(row.converted)}")
+        print(f"    already_converted {bool(row.already_converted)}")
+        if row.anonymous_id == "A0001" and row.session_id.endswith("0002"):
+            print("    note: second visit for A0001 because prior gap was 35 minutes")
+        if bool(row.converted):
+            print("    note: conversion event occurred in/after this visit within 7 days")
+
+
 def main() -> None:
-    print("=" * 60)
-    print("SESSIONIZE — 30-minute inactivity rule")
-    print("=" * 60)
+    _section("SESSIONIZE — 30-minute inactivity rule")
+    print("Goal: turn raw clicks into visits (sessions) + a conversion label.")
     describe_raw()
 
-    print("\nWhat the algorithm does")
+    print("\nAlgorithm steps")
     print("  1. Sort by cookie + time")
     print("  2. Drop near-duplicates (same cookie/event/content within 2s)")
     print("  3. Tag stage + conversion flags")
-    print("  4. New session when gap since prior event > 1800s (30 min)")
+    print(f"  4. New session when gap since prior event > {SESSION_GAP_SECONDS}s (30 min)")
     print("  5. Build one session summary row (duration, furthest stage, …)")
-    print("  6. Label converted if first conversion is within 7 days")
+    print(f"  6. Label converted if first conversion is within {HORIZON_DAYS} days")
 
-    raw = load_raw_events()
-    print(f"\nRaw events in: {len(raw)}")
+    raw = load_raw_events().sort_values(["anonymous_id", "timestamp"], kind="mergesort")
+    _section("OUTPUT 1 — Raw input events")
+    print(f"Count: {len(raw)} rows from toy_raw_events.load_raw_events()")
+    print(
+        raw[["anonymous_id", "timestamp", "event_name", "content_id", "device_type", "referrer"]].to_string(
+            index=False
+        )
+    )
+    print("\nLook for: A0001 has two page_view on C001 one second apart (near-duplicate).")
+
     cleaned = drop_near_duplicates(raw)
-    print(f"After near-duplicate drop: {len(cleaned)} (dropped {len(raw) - len(cleaned)})")
+    dropped = len(raw) - len(cleaned)
+    _section("OUTPUT 2 — After near-duplicate drop")
+    print(f"Kept {len(cleaned)} of {len(raw)} events  (dropped {dropped})")
+    print("Rule: same cookie + same event_name + same content_id + gap ≤ 2 seconds → drop.")
+    if dropped:
+        print("Dropped row(s): A0001 page_view at 10:00:01 on C001 (duplicate of 10:00:00).")
 
     events = sessionize(cleaned)
-    print("\nSessionized events")
+    _section("OUTPUT 3 — Sessionized event table")
+    _explain_event_columns()
+    print("\nFull table")
     print(
         events[
             ["anonymous_id", "timestamp", "event_name", "gap_seconds", "session_id", "stage", "is_conversion"]
         ].to_string(index=False)
     )
+    _walk_event_rows(events)
 
     sessions = attach_conversion_label(session_summary(events), events)
-    print("\nSession summaries")
+    _section("OUTPUT 4 — Session summary table (one row per visit)")
+    _explain_session_columns()
+    print("\nFull table")
     print(
         sessions[
             [
@@ -162,21 +255,35 @@ def main() -> None:
                 "duration_sec",
                 "n_behavior_events",
                 "furthest_stage",
+                "furthest_rank",
                 "converted",
+                "already_converted",
             ]
         ].to_string(index=False)
     )
+    _walk_session_rows(sessions)
 
-    print("\nBy-hand check")
-    print("  A0001 duplicate at +1s dropped → one fewer event")
-    print("  A0001 gap 10:05→10:40 = 2100s > 1800 → two session_ids")
-    print("  A0004 has subscription_active → converted=True on that visit")
-    a1 = events.loc[events["anonymous_id"] == "A0001", "session_id"].nunique()
-    print(f"  Observed A0001 sessions: {a1} (expect 2)")
+    _section("OUTPUT 5 — Acceptance checks")
+    a1_sessions = events.loc[events["anonymous_id"] == "A0001", "session_id"].nunique()
+    a1_gap = float(
+        events.loc[
+            (events["anonymous_id"] == "A0001") & (events["timestamp"] == "2026-01-10 10:40:00"),
+            "gap_seconds",
+        ].iloc[0]
+    )
+    converters = sessions.loc[sessions["converted"], "session_id"].tolist()
+    print(f"  A0001 session count     = {a1_sessions}  (expect 2)")
+    print(f"  A0001 10:40 gap_seconds = {a1_gap:.0f}  (expect 2100 > 1800 → new session)")
+    print(f"  Events after dedupe     = {len(events)}  (expect 18; raw had 19)")
+    print(f"  Converted session_ids   = {converters}  (expect ['S000000005'])")
+    print(f"  Total sessions          = {len(sessions)}  (expect 5)")
 
-    print("\nTeaching takeaway")
-    print("  Cookie = long-lived ID; session = one visit cut at 30 min idle.")
-    print("  Outputs feed Journey / HMM / Features (lab step01 → later steps).")
+    _section("Teaching takeaway")
+    print("  Cookie (anonymous_id) = long-lived browser identity.")
+    print("  Session (session_id)  = one visit; ends after 30 minutes idle.")
+    print("  Event table           = every click with its session membership.")
+    print("  Session table         = one scorecard per visit for later labs.")
+    print("  Next examples         = Journey / HMM / Features / Segmentation.")
 
 
 if __name__ == "__main__":

@@ -50,30 +50,65 @@ def funnel_table(events: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def _section(title: str) -> None:
+    print("\n" + "=" * 72)
+    print(title)
+    print("=" * 72)
+
+
 def main() -> None:
-    print("=" * 60)
-    print("FUNNEL — reach & advance (stage tags)")
-    print("=" * 60)
+    _section("FUNNEL — reach & advance (stage tags)")
+    print("Goal: measure how deep visits get and where they stall.")
     describe_sessions()
     events = load_toy_events()
 
-    print("\nWhat the algorithm does")
+    print("\nAlgorithm steps")
     print("  1. Tag each event with a funnel stage")
     print("  2. Mark which stages each session ever touched")
-    print("  3. Count sessions at each stage")
+    print("  3. Count sessions at each stage + who ended there")
     print("  4. Advance rate = share that also touched the NEXT stage")
     print("     (co-occurrence — not 'immediate next click')")
 
-    print("\nBy-hand check")
-    print("  landing in all 4 sessions")
-    print("  scroll in S2,S3,S4 → 3/4 = 0.75 advance from landing")
-    print("  intent in S3,S4; deep only in S4 → 1/2 = 0.50 intent→deep")
+    _section("OUTPUT 1 — Input events with stages")
+    print(events[["session_idx", "anonymous_id", "timestamp", "event_name", "stage"]].to_string(index=False))
+    print("\nPer-session stages touched")
+    for sid, part in events.groupby("session_idx", sort=True):
+        stages = " → ".join(dict.fromkeys(part["stage"].tolist()))
+        print(f"  S{sid}: {stages}")
 
     table = funnel_table(events)
-    print("\nFunnel table")
+    _section("OUTPUT 2 — Funnel table")
+    print("Column meanings")
+    print("  stage                       funnel rung")
+    print("  events                      how many events mapped to this stage")
+    print("  sessions_containing_stage   visits that ever hit this stage")
+    print("  sessions_ending_here        visits whose FURTHEST stage is this one")
+    print("  next_stage                  next rung in the ladder")
+    print("  advance_rate                share of containing sessions that also hit next_stage")
+    print("\nFull table")
     print(table.to_string(index=False))
 
-    print("\nTeaching takeaway")
+    _section("OUTPUT 3 — Row-by-row reading")
+    for row in table.itertuples(index=False):
+        print(f"\n  {row.stage}")
+        print(f"    events={row.events}, sessions_with_stage={row.sessions_containing_stage}, "
+              f"ended_here={row.sessions_ending_here}")
+        if row.next_stage:
+            print(f"    next={row.next_stage}, advance_rate={row.advance_rate}")
+            if row.stage == "landing":
+                print("    interpret: 4 sessions landed; 3 also scrolled → 0.75")
+            if row.stage == "intent":
+                print("    interpret: 2 sessions reached intent; only 1 also hit deep → 0.50 (cliff)")
+        else:
+            print("    end of ladder (no next stage)")
+
+    _section("OUTPUT 4 — Acceptance checks")
+    landing = table.loc[table["stage"] == "landing"].iloc[0]
+    intent = table.loc[table["stage"] == "intent"].iloc[0]
+    print(f"  landing advance_rate = {landing.advance_rate}  (expect 0.75)")
+    print(f"  intent advance_rate  = {intent.advance_rate}  (expect 0.50)")
+
+    _section("Teaching takeaway")
     print("  Funnel answers: 'How deep did visits get?' and 'Where is the cliff?'")
 
 
