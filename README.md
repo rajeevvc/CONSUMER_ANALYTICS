@@ -53,7 +53,7 @@ Raw clicks
 Inside each context folder:
 
 - `step0N_*.py` — full lab on `day-1/data` → writes `day-1/output`
-- `step0N_*.md` — lean learner guide
+- `step0N_*.md` — learner guide with **deep code walkthrough**
 - `examples/` — toy demos that print **RAW** then **PROCESSED**
 - `README.md` — short folder index
 

@@ -5,7 +5,7 @@ Learn latent reading modes on event sequences.
 | Kind | File |
 |------|------|
 | Lab | [`step03_behavioral_state_modeling.py`](step03_behavioral_state_modeling.py) |
-| Guide | [`step03_behavioral_state_modeling.md`](step03_behavioral_state_modeling.md) |
+| Guide | [`step03_behavioral_state_modeling.md`](step03_behavioral_state_modeling.md) (deep code walkthrough) |
 | Toy | [`examples/01_hmm_example.py`](examples/01_hmm_example.py) |
 
 ```bash

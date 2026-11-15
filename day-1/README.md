@@ -28,8 +28,9 @@ day-1/
 Each context folder holds:
 
 - `step0N_*.py` — full lab script  
-- `step0N_*.md` — learner guide  
-- `examples/` — toy demos (RAW → PROCESSED)
+- `step0N_*.md` — learner guide **with deep code walkthrough** (functions, constants, pipeline)  
+- `examples/` — toy demos (RAW → PROCESSED)  
+- `README.md` — short folder index
 
 ## Pipeline order
 

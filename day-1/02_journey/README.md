@@ -5,7 +5,7 @@ Funnel, Markov (+ exit), and DFG on sessionized visits.
 | Kind | File |
 |------|------|
 | Lab | [`step02_journey_analysis.py`](step02_journey_analysis.py) |
-| Guide | [`step02_journey_analysis.md`](step02_journey_analysis.md) |
+| Guide | [`step02_journey_analysis.md`](step02_journey_analysis.md) (deep code walkthrough) |
 | Toys | [`examples/`](examples/) — Funnel, Markov, DFG |
 
 ```bash
