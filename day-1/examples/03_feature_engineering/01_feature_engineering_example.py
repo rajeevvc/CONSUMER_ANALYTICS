@@ -3,7 +3,7 @@
 Question: How do we turn visits into one feature row per cookie?
 
 Run:
-    python day-1/examples/05_feature_engineering_example.py
+    python day-1/examples/03_feature_engineering/01_feature_engineering_example.py
 """
 
 from __future__ import annotations
@@ -11,6 +11,12 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from pathlib import Path
+import sys
+_EXAMPLES = Path(__file__).resolve().parents[1]
+_SHARED = _EXAMPLES / "_shared"
+if str(_SHARED) not in sys.path:
+    sys.path.insert(0, str(_SHARED))
 from toy_sessions import STAGE_BY_EVENT, describe_sessions, load_toy_events
 
 STAGE_RANK = {"landing": 1, "scroll": 2, "engaged": 3, "intent": 4, "deep": 5}

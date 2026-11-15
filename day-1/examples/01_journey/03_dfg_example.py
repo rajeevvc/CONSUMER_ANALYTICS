@@ -3,7 +3,7 @@
 Question: What event→event paths actually happen? (process map)
 
 Run:
-    python day-1/examples/03_dfg_example.py
+    python day-1/examples/01_journey/03_dfg_example.py
 """
 
 from __future__ import annotations
@@ -11,6 +11,12 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from pathlib import Path
+import sys
+_EXAMPLES = Path(__file__).resolve().parents[1]
+_SHARED = _EXAMPLES / "_shared"
+if str(_SHARED) not in sys.path:
+    sys.path.insert(0, str(_SHARED))
 from toy_sessions import describe_sessions, load_toy_events
 
 

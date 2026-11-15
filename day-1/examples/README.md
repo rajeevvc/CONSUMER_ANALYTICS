@@ -1,8 +1,15 @@
 # Day 1 algorithm examples
 
-Tiny, hand-checkable demos for Journey, HMM, Features, and Segmentation.
+Toy demos ordered by **learning sequence** (after sessionization).
 
-They use **toy data** (not full `web_events.csv`) so you can verify logic on a whiteboard.
+```
+examples/
+  _shared/                 shared toy clickstream
+  01_journey/              Funnel → Markov → DFG
+  02_state_modeling/       HMM latent modes
+  03_feature_engineering/  session → user features
+  04_segmentation/         K-Means + GMM
+```
 
 ## Setup
 
@@ -11,46 +18,42 @@ conda activate awsproject
 cd /path/to/CONSUMERANALYTICS
 ```
 
-## Run all
+## Run in learning order
 
 ```bash
-python day-1/examples/01_funnel_example.py
-python day-1/examples/02_markov_example.py
-python day-1/examples/03_dfg_example.py
-python day-1/examples/04_hmm_example.py
-python day-1/examples/05_feature_engineering_example.py
-python day-1/examples/06_segmentation_example.py
+# 1) Journey
+python day-1/examples/01_journey/01_funnel_example.py
+python day-1/examples/01_journey/02_markov_example.py
+python day-1/examples/01_journey/03_dfg_example.py
+
+# 2) State modeling
+python day-1/examples/02_state_modeling/01_hmm_example.py
+
+# 3) Features
+python day-1/examples/03_feature_engineering/01_feature_engineering_example.py
+
+# 4) Segmentation
+python day-1/examples/04_segmentation/01_segmentation_example.py
 ```
 
-## What each example teaches
+Lab prerequisite (full pipeline): `python day-1/step01_sessionize.py`  
+These examples use **toy data** and do not need the full CSV.
 
-| File | Step | Algorithm | Question |
-|------|------|-----------|----------|
-| `01_funnel_example.py` | Journey | Funnel | How many sessions reached each stage? |
-| `02_markov_example.py` | Journey | Markov (+ exit) | Given this stage, what happens next? |
-| `03_dfg_example.py` | Journey | DFG | What event→event paths occur? |
-| `04_hmm_example.py` | State modeling | Categorical HMM | What latent reading mode is active? |
-| `05_feature_engineering_example.py` | Features | Session→user rollup | How do visits become cookie features? |
-| `06_segmentation_example.py` | Segmentation | K-Means + GMM | Which audience group is this cookie? |
+## Map to lab steps
 
-Shared Journey/HMM/Features data: `toy_sessions.py`  
-Segmentation uses a separate 12-cookie toy audience (3 clear personas).
+| Learning folder | Lab step | Algorithms |
+|-----------------|----------|------------|
+| `01_journey/` | `step02_journey_analysis.py` | Funnel, Markov, DFG |
+| `02_state_modeling/` | `step03_behavioral_state_modeling.py` | Categorical HMM |
+| `03_feature_engineering/` | `step04_feature_engineering.py` | Session → user rollup |
+| `04_segmentation/` | `step05_behavioral_segmentation.py` | K-Means, GMM |
 
-## Journey toy sessions
-
-| Session | Path idea |
-|---------|-----------|
-| S1 | Bounce on `page_view` |
-| S2 | Read to `engaged_read`, then leave |
-| S3 | Reach intent, no checkout |
-| S4 | Intent → checkout → payment → subscribe |
-
-## How the later steps connect
+## How they connect
 
 ```
-Events
-  → Funnel / Markov / DFG   (observed journey)
-  → HMM                     (latent modes inside sequences)
-  → Feature engineering     (session → user vectors)
-  → K-Means / GMM           (audience segments)
+Sessionize (step01)
+   → Journey: Funnel / Markov / DFG     (observed paths)
+   → HMM                                (latent modes)
+   → Feature engineering                (cookie vectors)
+   → Segmentation                       (audience groups)
 ```

@@ -21,7 +21,7 @@ python day-1/step04_feature_engineering.py
 ### Tiny worked example
 
 ```bash
-python day-1/examples/05_feature_engineering_example.py
+python day-1/examples/03_feature_engineering/01_feature_engineering_example.py
 ```
 
 See [examples/README.md](examples/README.md).

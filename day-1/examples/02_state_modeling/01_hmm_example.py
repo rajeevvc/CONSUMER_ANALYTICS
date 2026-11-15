@@ -3,7 +3,7 @@
 Question: What hidden mode is active behind each click?
 
 Run:
-    python day-1/examples/04_hmm_example.py
+    python day-1/examples/02_state_modeling/01_hmm_example.py
 """
 
 from __future__ import annotations
@@ -14,14 +14,18 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-HERE = Path(__file__).resolve().parent
-ROOT = HERE.parent.parent
-VENDOR = ROOT / "marketing-behavioral-labs" / "day1" / ".vendor"
+_DAY1 = Path(__file__).resolve().parents[2]
+_ROOT = _DAY1.parent
+VENDOR = _ROOT / "marketing-behavioral-labs" / "day1" / ".vendor"
 if VENDOR.exists() and str(VENDOR) not in sys.path:
     sys.path.insert(0, str(VENDOR))
 
 from hmmlearn.hmm import CategoricalHMM
 
+_EXAMPLES = Path(__file__).resolve().parents[1]
+_SHARED = _EXAMPLES / "_shared"
+if str(_SHARED) not in sys.path:
+    sys.path.insert(0, str(_SHARED))
 from toy_sessions import describe_sessions, load_toy_events
 
 # Small vocabulary for a clear 2-mode demo (lab uses 12 events / 4 modes).
