@@ -3,7 +3,7 @@
 Question: How many sessions reached each stage, and how many advanced?
 
 Run:
-    python day-1/examples/01_journey/01_funnel_example.py
+    python day-1/examples/02_journey/01_funnel_example.py
 """
 
 from __future__ import annotations

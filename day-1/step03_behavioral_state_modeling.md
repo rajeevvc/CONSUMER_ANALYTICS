@@ -19,7 +19,7 @@ python day-1/step03_behavioral_state_modeling.py
 ### Tiny worked example
 
 ```bash
-python day-1/examples/02_state_modeling/01_hmm_example.py
+python day-1/examples/03_state_modeling/01_hmm_example.py
 ```
 
 See [examples/README.md](examples/README.md).

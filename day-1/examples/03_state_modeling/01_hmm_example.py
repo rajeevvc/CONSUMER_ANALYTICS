@@ -3,7 +3,7 @@
 Question: What hidden mode is active behind each click?
 
 Run:
-    python day-1/examples/02_state_modeling/01_hmm_example.py
+    python day-1/examples/03_state_modeling/01_hmm_example.py
 """
 
 from __future__ import annotations

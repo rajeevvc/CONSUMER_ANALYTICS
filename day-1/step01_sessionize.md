@@ -11,6 +11,14 @@ conda activate awsproject
 python day-1/step01_sessionize.py
 ```
 
+### Tiny worked example
+
+```bash
+python day-1/examples/01_sessionize/01_sessionize_example.py
+```
+
+See [examples/README.md](examples/README.md).
+
 ## Input
 
 | File | Used? |

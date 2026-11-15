@@ -15,12 +15,12 @@ Raw data lives in `day-1/data/`. Outputs go to `day-1/output/`.
 
 | Step | Script | Learner guide |
 |------|--------|----------------|
-| 1 | `step01_sessionize.py` | [step01_sessionize.md](step01_sessionize.md) |
+| 1 | `step01_sessionize.py` | [step01_sessionize.md](step01_sessionize.md) · [examples/01_sessionize](examples/01_sessionize/) |
 | 1b (optional) | `step01b_sessionize_duckdb_sql.py` | [step01b_sessionize_duckdb.md](step01b_sessionize_duckdb.md) |
-| 2 | `step02_journey_analysis.py` | [step02_journey_analysis.md](step02_journey_analysis.md) · [examples/01_journey](examples/01_journey/) |
-| 3 | `step03_behavioral_state_modeling.py` | [step03_behavioral_state_modeling.md](step03_behavioral_state_modeling.md) · [examples/02_state_modeling](examples/02_state_modeling/) |
-| 4 | `step04_feature_engineering.py` | [step04_feature_engineering.md](step04_feature_engineering.md) · [examples/03_feature_engineering](examples/03_feature_engineering/) |
-| 5 | `step05_behavioral_segmentation.py` | [step05_behavioral_segmentation.md](step05_behavioral_segmentation.md) · [examples/04_segmentation](examples/04_segmentation/) |
+| 2 | `step02_journey_analysis.py` | [step02_journey_analysis.md](step02_journey_analysis.md) · [examples/02_journey](examples/02_journey/) |
+| 3 | `step03_behavioral_state_modeling.py` | [step03_behavioral_state_modeling.md](step03_behavioral_state_modeling.md) · [examples/03_state_modeling](examples/03_state_modeling/) |
+| 4 | `step04_feature_engineering.py` | [step04_feature_engineering.md](step04_feature_engineering.md) · [examples/04_feature_engineering](examples/04_feature_engineering/) |
+| 5 | `step05_behavioral_segmentation.py` | [step05_behavioral_segmentation.md](step05_behavioral_segmentation.md) · [examples/05_segmentation](examples/05_segmentation/) |
 
 ## Full run (CSV path)
 

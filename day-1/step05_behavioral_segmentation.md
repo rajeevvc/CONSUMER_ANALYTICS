@@ -21,7 +21,7 @@ python day-1/step05_behavioral_segmentation.py
 ### Tiny worked example
 
 ```bash
-python day-1/examples/04_segmentation/01_segmentation_example.py
+python day-1/examples/05_segmentation/01_segmentation_example.py
 ```
 
 See [examples/README.md](examples/README.md).

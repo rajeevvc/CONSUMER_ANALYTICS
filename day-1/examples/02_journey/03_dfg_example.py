@@ -3,7 +3,7 @@
 Question: What event→event paths actually happen? (process map)
 
 Run:
-    python day-1/examples/01_journey/03_dfg_example.py
+    python day-1/examples/02_journey/03_dfg_example.py
 """
 
 from __future__ import annotations

@@ -3,7 +3,7 @@
 Question: Which audience group does each cookie belong to?
 
 Run:
-    python day-1/examples/04_segmentation/01_segmentation_example.py
+    python day-1/examples/05_segmentation/01_segmentation_example.py
 """
 
 from __future__ import annotations

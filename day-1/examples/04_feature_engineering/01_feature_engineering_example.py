@@ -3,7 +3,7 @@
 Question: How do we turn visits into one feature row per cookie?
 
 Run:
-    python day-1/examples/03_feature_engineering/01_feature_engineering_example.py
+    python day-1/examples/04_feature_engineering/01_feature_engineering_example.py
 """
 
 from __future__ import annotations

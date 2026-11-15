@@ -3,7 +3,7 @@
 Question: Given the current stage, where do people go next — or exit?
 
 Run:
-    python day-1/examples/01_journey/02_markov_example.py
+    python day-1/examples/02_journey/02_markov_example.py
 """
 
 from __future__ import annotations
