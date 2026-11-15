@@ -80,3 +80,12 @@ Four finished visits for Journey / HMM / Features — small enough to compute Fu
 | Prove Funnel/Markov/DFG/HMM/features math | Sessionized journeys (`toy_sessions`) |
 
 Segmentation uses a **third** synthetic audience built inside `05_segmentation/01_segmentation_example.py` (`toy_audience`) because clustering needs more than 4 points.
+
+---
+
+## Where to see the printed output
+
+These loaders only supply data. The **terminal tables** and “how to read them” notes live in each example’s paired walkthrough:
+
+- Sessionize (uses `toy_raw_events`): [`../01_sessionize/01_sessionize_example.md`](../01_sessionize/01_sessionize_example.md) → *Sample terminal output*
+- Journey / HMM / Features (use `toy_sessions`): see each `02_journey/*_example.md`, `03_state_modeling/01_hmm_example.md`, `04_feature_engineering/01_feature_engineering_example.md`

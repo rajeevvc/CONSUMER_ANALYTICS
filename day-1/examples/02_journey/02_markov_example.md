@@ -141,6 +141,78 @@ Example: Funnel `intent→deep` advance = 0.50 means half of intent sessions als
 
 ---
 
+## Sample terminal output (what you see when you run it)
+
+### OUTPUT 1 — Stage sequence per session
+
+```text
+  S1: landing → exit
+  S2: landing → scroll → engaged → exit
+  S3: landing → scroll → engaged → intent → intent → exit
+  S4: landing → scroll → engaged → intent → deep → deep → subscription → exit
+
+Session endings → exit edges
+  S1 ends on landing       → landing→exit
+  S2 ends on engaged       → engaged→exit
+  S3 ends on intent        → intent→exit
+  S4 ends on subscription  → subscription→exit
+```
+
+**How to read it:** These are the *consecutive* stage walks Markov will count. Notice S3 has `intent → intent` (two intent-tagged events in a row). Every visit also gets one `→ exit` after its last event.
+
+---
+
+### OUTPUT 2 — Transition matrix
+
+```text
+              landing  scroll  engaged  intent   deep  registration  subscription   exit
+landing           0.0    0.75      0.0   0.000  0.000           0.0           0.0  0.250
+scroll            0.0    0.00      1.0   0.000  0.000           0.0           0.0  0.000
+engaged           0.0    0.00      0.0   0.667  0.000           0.0           0.0  0.333
+intent            0.0    0.00      0.0   0.333  0.333           0.0           0.0  0.333
+deep              0.0    0.00      0.0   0.000  0.500           0.0           0.5  0.000
+registration      0.0    0.00      0.0   0.000  0.000           0.0           0.0  0.000
+subscription      0.0    0.00      0.0   0.000  0.000           0.0           0.0  1.000
+
+Highlighted cells
+  P(scroll | landing) = 0.75  (3 of 4 landing steps go to scroll)
+  P(exit | landing)   = 0.25  (S1 bounces)
+  P(deep | intent)    = 0.333  (intent rarely becomes checkout)
+```
+
+**How to read it:** Pick a **row** (where you are now). Cells are “probability of going to that column next.” Landing row: 75% scroll, 25% exit — never jumps straight to deep. Intent row: stays in intent 33%, goes deep 33%, exits 33%. That is *next-step* dynamics, not Funnel’s “ever reached.”
+
+---
+
+### OUTPUT 3 — Drop-off table
+
+```text
+       stage  transitions  exits  exit_probability
+     landing            4      1            0.2500
+      scroll            3      0            0.0000
+     engaged            3      1            0.3333
+      intent            3      1            0.3333
+        deep            2      0            0.0000
+registration            0      0            0.0000
+subscription            1      1            1.0000
+```
+
+**How to read it:** `exit_probability` is the share of outbound steps that leave the visit. Scroll never ends a visit in this toy (`0.0`). Subscription always exits (`1.0`) because converting is the last event of S4. Engaged and intent each lose about one-third of their departures to exit.
+
+---
+
+### OUTPUT 4 — Acceptance checks
+
+```text
+  landing→scroll = 0.75  (expect 0.75)
+  landing→exit   = 0.25  (expect 0.25)
+  engaged→exit   = 0.333  (expect ~0.333)
+```
+
+**How to read it:** Sanity check that the matrix matches the hand-built sequences.
+
+---
+
 ## What to take into the lab
 
 `step02` builds the same count → probability machinery on production-scale sessionized stages. High `exit_probability` at mid-funnel stages is a practical drop-off signal.

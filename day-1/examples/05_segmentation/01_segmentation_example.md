@@ -143,6 +143,104 @@ On this clean toy they usually recover the same three groups.
 
 `step05` runs the same scale → choose k → K-Means + GMM flow on **real user features** from `step04` (often more columns). Naming rules may be richer; HDBSCAN was removed from the teaching path.
 
+## Sample terminal output (what you see when you run it)
+
+> Note: sklearn/joblib may print a harmless CPU-core warning at the top; ignore it.
+
+### OUTPUT 1 — Toy audience (ground-truth personas)
+
+```text
+anonymous_id         persona  mean_furthest_rank  conversion_rate  share_deep
+          B1   bouncer_truth                 1.0              0.0         0.0
+          …
+          R1    reader_truth                 3.0              0.0         0.0
+          …
+          C1 converter_truth                 4.5              0.4         0.3
+          …
+
+Persona counts
+bouncer_truth      4
+reader_truth       4
+converter_truth    4
+```
+
+**How to read it:** 12 cookies in three planted groups. `persona` is **not** used for fitting — it is only there so you can check whether clustering recovered the design. Depth and conversion separate the groups cleanly.
+
+---
+
+### OUTPUT 2 — Model selection diagnostics
+
+```text
+  Chosen k = 3
+  Silhouette by k:
+    k=2: silhouette=0.700
+    k=3: silhouette=0.762 ← chosen
+    k=4: silhouette=0.675
+  GMM BIC = -568.5  (lower is better for model comparison)
+```
+
+**How to read it:** Silhouette scores how cleanly clusters separate for each candidate `k`. Here **k=3** scores highest (0.762), matching the three planted personas. BIC is logged for the fitted GMM (useful when comparing mixture models).
+
+---
+
+### OUTPUT 3 — Assignments
+
+```text
+anonymous_id         persona    kmeans_label       gmm_label
+          B1   bouncer_truth        bouncers        bouncers
+          …
+          R1    reader_truth regular_readers regular_readers
+          …
+          C1 converter_truth      converters      converters
+          …
+
+Agreement check (persona family vs kmeans_label)
+  match rate = 100.00%  (toy is designed to recover cleanly)
+```
+
+**How to read it:** Every cookie’s learned label matches its designed family. K-Means and GMM agree. In messy real data you would expect some mismatches; the toy proves the pipeline wiring.
+
+---
+
+### OUTPUT 4 — Segment profiles
+
+```text
+K-Means profiles
+ segment           label  readers  mean_furthest_rank  conversion_rate  share_deep
+       0 regular_readers        4                3.30             0.00         0.0
+       1      converters        4                4.65             0.55         0.3
+       2        bouncers        4                1.00             0.00         0.0
+
+Profile reading
+  regular_readers: n=4, depth=3.3, conv=0.0, deep=0.0
+  converters: n=4, depth=4.65, conv=0.55, deep=0.3
+  bouncers: n=4, depth=1.0, conv=0.0, deep=0.0
+```
+
+**How to read it:** After clustering, these averages describe *who* each segment is:
+
+| Label | Profile story |
+|-------|----------------|
+| `bouncers` | Depth 1.0, no convert — land and leave |
+| `regular_readers` | Mid depth ~3.3, still no convert |
+| `converters` | Deep ~4.65, conversion ~0.55, some deep reach |
+
+GMM profiles match K-Means on this toy.
+
+---
+
+### OUTPUT 5 — Acceptance checks
+
+```text
+  k = 3  (expect 3)
+  distinct kmeans labels = ['bouncers', 'converters', 'regular_readers']
+  distinct gmm labels    = ['bouncers', 'converters', 'regular_readers']
+```
+
+**How to read it:** Confirms three named segments from both algorithms.
+
+---
+
 ## Pipeline position
 
 ```
