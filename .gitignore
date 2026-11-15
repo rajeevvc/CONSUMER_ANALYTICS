@@ -1,0 +1,15 @@
+# Track only day-1 for this repo; ignore sibling project trees if present
+marketing-behavioral-labs/
+xgboost_analytics/
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+
+# Regenerated pipeline artifacts (too large for GitHub)
+day-1/output/
+
+# Oversized raw extracts (>100MB GitHub limit; regenerate / copy locally)
+day-1/data/web_events.csv
+day-1/data/app_events.csv
+day-1/data/*.parquet
