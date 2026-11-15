@@ -17,10 +17,10 @@ Raw data lives in `day-1/data/`. Outputs go to `day-1/output/`.
 |------|--------|----------------|
 | 1 | `step01_sessionize.py` | [step01_sessionize.md](step01_sessionize.md) |
 | 1b (optional) | `step01b_sessionize_duckdb_sql.py` | [step01b_sessionize_duckdb.md](step01b_sessionize_duckdb.md) |
-| 2 | `step02_journey_analysis.py` | [step02_journey_analysis.md](step02_journey_analysis.md) |
-| 3 | `step03_behavioral_state_modeling.py` | [step03_behavioral_state_modeling.md](step03_behavioral_state_modeling.md) |
-| 4 | `step04_feature_engineering.py` | [step04_feature_engineering.md](step04_feature_engineering.md) |
-| 5 | `step05_behavioral_segmentation.py` | [step05_behavioral_segmentation.md](step05_behavioral_segmentation.md) |
+| 2 | `step02_journey_analysis.py` | [step02_journey_analysis.md](step02_journey_analysis.md) · [examples 01–03](examples/) |
+| 3 | `step03_behavioral_state_modeling.py` | [step03_behavioral_state_modeling.md](step03_behavioral_state_modeling.md) · [example 04](examples/04_hmm_example.py) |
+| 4 | `step04_feature_engineering.py` | [step04_feature_engineering.md](step04_feature_engineering.md) · [example 05](examples/05_feature_engineering_example.py) |
+| 5 | `step05_behavioral_segmentation.py` | [step05_behavioral_segmentation.md](step05_behavioral_segmentation.md) · [example 06](examples/06_segmentation_example.py) |
 
 ## Full run (CSV path)
 

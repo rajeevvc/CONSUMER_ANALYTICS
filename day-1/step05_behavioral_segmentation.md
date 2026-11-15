@@ -18,6 +18,14 @@ python day-1/step04_feature_engineering.py      # prerequisite
 python day-1/step05_behavioral_segmentation.py
 ```
 
+### Tiny worked example
+
+```bash
+python day-1/examples/06_segmentation_example.py
+```
+
+See [examples/README.md](examples/README.md).
+
 ## Input
 
 | File | Role |

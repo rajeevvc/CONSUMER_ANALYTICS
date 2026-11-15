@@ -18,6 +18,16 @@ python day-1/step01_sessionize.py          # if not already done
 python day-1/step02_journey_analysis.py
 ```
 
+### Tiny worked examples (Funnel / Markov / DFG)
+
+```bash
+python day-1/examples/01_funnel_example.py
+python day-1/examples/02_markov_example.py
+python day-1/examples/03_dfg_example.py
+```
+
+See [examples/README.md](examples/README.md).
+
 ## Input
 
 | File | Required columns |

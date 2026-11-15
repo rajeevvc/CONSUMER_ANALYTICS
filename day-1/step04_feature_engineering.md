@@ -18,6 +18,14 @@ python day-1/step03_behavioral_state_modeling.py   # optional — adds hmm_share
 python day-1/step04_feature_engineering.py
 ```
 
+### Tiny worked example
+
+```bash
+python day-1/examples/05_feature_engineering_example.py
+```
+
+See [examples/README.md](examples/README.md).
+
 ## Input
 
 | File | Role |
