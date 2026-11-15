@@ -9,7 +9,7 @@ Small catalog tables may be in this folder. Large clickstream extracts are **not
 Copy them from your lab data pack / generator into this folder before running:
 
 ```bash
-python day-1/sessionize.py
+python day-1/step01_sessionize.py
 ```
 
 Required for sessionize inventory: `web_events.csv`, `app_events.csv`, `content_catalog.csv`, `subscriptions.csv`.

@@ -2,7 +2,7 @@
 
 Run from repo root:
 
-    python day-1/sessionize_duckdb_sql.py
+    python day-1/step01b_sessionize_duckdb_sql.py
 
 Reads:
     day-1/data/web_events.parquet

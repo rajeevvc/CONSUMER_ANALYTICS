@@ -1,4 +1,4 @@
-# Learner guide — Journey analysis (`journey_analysis.py`)
+# Learner guide — Journey analysis (`step02_journey_analysis.py`)
 
 ## Goal
 
@@ -14,8 +14,8 @@ From sessionized events, build three complementary journey views:
 
 ```bash
 conda activate awsproject
-python day-1/sessionize.py          # if not already done
-python day-1/journey_analysis.py
+python day-1/step01_sessionize.py          # if not already done
+python day-1/step02_journey_analysis.py
 ```
 
 ## Input

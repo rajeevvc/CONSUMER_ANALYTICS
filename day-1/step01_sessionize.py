@@ -2,7 +2,7 @@
 
 Single self-contained script. Run from anywhere:
 
-    python day-1/sessionize.py
+    python day-1/step01_sessionize.py
 
 Reads the regenerated clickstream under day-1/data (new event taxonomy),
 drops near-duplicate rows, cuts sessions at 30 minutes of inactivity, attaches a
@@ -130,7 +130,7 @@ def load_web_events() -> pd.DataFrame:
         raise ValueError(
             "web_events.csv has unexpected event_name values: "
             + ", ".join(unknown)
-            + ". Update STAGE_BY_EVENT / BEHAVIOR_EVENTS in sessionize.py."
+            + ". Update STAGE_BY_EVENT / BEHAVIOR_EVENTS in step01_sessionize.py."
         )
 
     events = events.sort_values(["anonymous_id", "timestamp"], kind="mergesort")

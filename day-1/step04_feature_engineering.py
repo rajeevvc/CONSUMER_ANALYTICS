@@ -2,9 +2,9 @@
 
 Single self-contained script. Run after sessionization (HMM optional):
 
-    python day-1/sessionize.py
-    python day-1/behavioral_state_modeling.py   # optional, adds mode shares
-    python day-1/feature_engineering.py
+    python day-1/step01_sessionize.py
+    python day-1/step03_behavioral_state_modeling.py   # optional, adds mode shares
+    python day-1/step04_feature_engineering.py
 
 Reads CSV only. Rolls session rows up to one feature vector per anonymous_id.
 Writes:
@@ -25,7 +25,7 @@ OUTPUT = HERE / "output"
 SESSIONS = OUTPUT / "sessions.csv"
 EVENTS_HMM = OUTPUT / "sessionized_events_hmm.csv"
 
-# Keep in sync with day-1/sessionize.py behavior event counts.
+# Keep in sync with day-1/step01_sessionize.py behavior event counts.
 EVENT_COLUMNS = [
     "page_view",
     "scroll",
@@ -91,11 +91,11 @@ USER_FEATURE_COLUMNS = [
 
 
 def load_sessions() -> pd.DataFrame:
-    """Load sessions.csv from sessionize.py; rebuild if missing."""
+    """Load sessions.csv from step01_sessionize.py; rebuild if missing."""
     if SESSIONS.exists():
         sessions = pd.read_csv(SESSIONS)
     else:
-        from sessionize import attach_conversion_label, load_web_events, session_summary, sessionize
+        from step01_sessionize import attach_conversion_label, load_web_events, session_summary, sessionize
 
         print("sessions.csv missing — rebuilding sessions")
         events = sessionize(load_web_events())
@@ -105,7 +105,7 @@ def load_sessions() -> pd.DataFrame:
     if missing:
         raise ValueError(
             f"{SESSIONS.name} missing columns: {', '.join(missing)}. "
-            "Re-run python day-1/sessionize.py with the regenerated web_events.csv."
+            "Re-run python day-1/step01_sessionize.py with the regenerated web_events.csv."
         )
 
     sessions["session_start"] = pd.to_datetime(sessions["session_start"], errors="coerce")
@@ -158,7 +158,7 @@ def enrich_session_features(sessions: pd.DataFrame) -> pd.DataFrame:
 
 
 def _hmm_session_shares() -> pd.DataFrame | None:
-    """Optional mode mix from behavioral_state_modeling.py CSV output."""
+    """Optional mode mix from step03_behavioral_state_modeling.py CSV output."""
     if not EVENTS_HMM.exists():
         return None
     events = pd.read_csv(EVENTS_HMM, usecols=["session_idx", "hmm_mode", "event_name", "is_conversion"])

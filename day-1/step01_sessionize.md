@@ -1,4 +1,4 @@
-# Learner guide — Sessionization (`sessionize.py`)
+# Learner guide — Sessionization (`step01_sessionize.py`)
 
 ## Goal
 
@@ -8,7 +8,7 @@ Turn raw web clickstream into **visits (sessions)** using a **30-minute inactivi
 
 ```bash
 conda activate awsproject
-python day-1/sessionize.py
+python day-1/step01_sessionize.py
 ```
 
 ## Input

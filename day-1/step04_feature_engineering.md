@@ -1,4 +1,4 @@
-# Learner guide — Feature engineering (`feature_engineering.py`)
+# Learner guide — Feature engineering (`step04_feature_engineering.py`)
 
 ## Goal
 
@@ -13,9 +13,9 @@ Sessionize gives visit summaries; this step rolls them up to **audience-level** 
 
 ```bash
 conda activate awsproject
-python day-1/sessionize.py
-python day-1/behavioral_state_modeling.py   # optional — adds hmm_share_* if present
-python day-1/feature_engineering.py
+python day-1/step01_sessionize.py
+python day-1/step03_behavioral_state_modeling.py   # optional — adds hmm_share_* if present
+python day-1/step04_feature_engineering.py
 ```
 
 ## Input

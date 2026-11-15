@@ -2,8 +2,8 @@
 
 Single self-contained script. Run after sessionization:
 
-    python day-1/sessionize.py
-    python day-1/behavioral_state_modeling.py
+    python day-1/step01_sessionize.py
+    python day-1/step03_behavioral_state_modeling.py
 
 Fits a categorical Hidden Markov Model on clickstream events to recover
 latent reading modes (skimming, scrolling, exploring, deep_reading).
@@ -43,7 +43,7 @@ VALID_END = pd.Timestamp("2026-03-01")
 STATE_COLUMN = "hmm_state"
 MINIMUM_MODE_MASS = 0.30
 
-# Keep in sync with day-1/sessionize.py event taxonomy.
+# Keep in sync with day-1/step01_sessionize.py event taxonomy.
 OBSERVATIONS = [
     "page_view",
     "scroll",
@@ -80,11 +80,11 @@ REQUIRED_COLUMNS = ("anonymous_id", "timestamp", "event_name", "session_idx")
 
 
 def load_sessionized_events() -> pd.DataFrame:
-    """Load sessionize.py CSV; rebuild if missing. Always refresh obs codes."""
+    """Load step01_sessionize.py CSV; rebuild if missing. Always refresh obs codes."""
     if SESSIONIZED_EVENTS.exists():
         events = pd.read_csv(SESSIONIZED_EVENTS)
     else:
-        from sessionize import load_web_events, sessionize
+        from step01_sessionize import load_web_events, sessionize
 
         print("sessionized_events.csv missing — rebuilding sessions")
         events = sessionize(load_web_events())
@@ -93,7 +93,7 @@ def load_sessionized_events() -> pd.DataFrame:
     if missing:
         raise RuntimeError(
             f"{SESSIONIZED_EVENTS.name} missing columns: {', '.join(missing)}. "
-            "Re-run python day-1/sessionize.py."
+            "Re-run python day-1/step01_sessionize.py."
         )
 
     unknown = sorted(set(events["event_name"].dropna().astype(str)) - set(OBSERVATIONS))

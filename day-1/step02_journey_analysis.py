@@ -2,8 +2,8 @@
 
 Single self-contained script. Run after sessionization:
 
-    python day-1/sessionize.py
-    python day-1/journey_analysis.py
+    python day-1/step01_sessionize.py
+    python day-1/step02_journey_analysis.py
 
 Uses day-1/output/sessionized_events.csv when present; otherwise rebuilds
 sessions from day-1/data. Writes:
@@ -32,7 +32,7 @@ SESSIONIZED_EVENTS = OUTPUT / "sessionized_events.csv"
 VALID_END = pd.Timestamp("2026-03-01")
 MAX_VARIANT_STEPS = 6
 
-# Keep in sync with day-1/sessionize.py (new web event taxonomy).
+# Keep in sync with day-1/step01_sessionize.py (new web event taxonomy).
 CONVERSION_EVENTS = {"register_complete", "subscription_active"}
 STAGE_BY_EVENT = {
     "page_view": "landing",
@@ -59,11 +59,11 @@ INTERVENING_STAGES = ["landing", "scroll", "engaged", "intent", "deep"]
 
 
 def load_sessionized_events() -> pd.DataFrame:
-    """Load sessionize.py CSV output; rebuild if missing."""
+    """Load step01_sessionize.py CSV output; rebuild if missing."""
     if SESSIONIZED_EVENTS.exists():
         events = pd.read_csv(SESSIONIZED_EVENTS)
     else:
-        from sessionize import load_web_events, sessionize
+        from step01_sessionize import load_web_events, sessionize
 
         print("sessionized_events.csv missing — rebuilding sessions")
         events = sessionize(load_web_events())

@@ -2,8 +2,8 @@
 
 Single self-contained script. Run after feature engineering:
 
-    python day-1/feature_engineering.py
-    python day-1/behavioral_segmentation.py
+    python day-1/step04_feature_engineering.py
+    python day-1/step05_behavioral_segmentation.py
 
 Clusters users (anonymous_id) from user-level features. Writes:
 
@@ -29,7 +29,7 @@ HERE = Path(__file__).resolve().parent
 OUTPUT = HERE / "output"
 USER_FEATURES = OUTPUT / "user_features.csv"
 
-# Keep in sync with day-1/feature_engineering.py user feature rates.
+# Keep in sync with day-1/step04_feature_engineering.py user feature rates.
 FEATURE_COLUMNS = [
     "n_sessions",
     "mean_duration_sec",
@@ -62,12 +62,12 @@ SEED = 42
 
 
 def load_user_features() -> pd.DataFrame:
-    """Load user_features.csv from feature_engineering.py; rebuild if needed."""
+    """Load user_features.csv from step04_feature_engineering.py; rebuild if needed."""
     if USER_FEATURES.exists():
         features = pd.read_csv(USER_FEATURES)
         return _ensure_feature_columns(features)
 
-    from feature_engineering import enrich_session_features, load_sessions, user_features
+    from step04_feature_engineering import enrich_session_features, load_sessions, user_features
 
     print("user_features.csv missing — rebuilding from sessions")
     return _ensure_feature_columns(user_features(enrich_session_features(load_sessions())))
@@ -80,7 +80,7 @@ def _ensure_feature_columns(features: pd.DataFrame) -> pd.DataFrame:
     if missing:
         raise RuntimeError(
             f"user features missing columns: {', '.join(missing)}. "
-            "Re-run python day-1/feature_engineering.py after sessionize."
+            "Re-run python day-1/step04_feature_engineering.py after sessionize."
         )
     out = features.copy()
     for column in FEATURE_COLUMNS:

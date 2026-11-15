@@ -1,4 +1,4 @@
-# Learner guide — Behavioral state modeling (`behavioral_state_modeling.py`)
+# Learner guide — Behavioral state modeling (`step03_behavioral_state_modeling.py`)
 
 ## Goal
 
@@ -12,8 +12,8 @@ HSMM (explicit duration) is optional; this lab uses a standard HMM where duratio
 
 ```bash
 conda activate awsproject
-python day-1/sessionize.py                    # prerequisite
-python day-1/behavioral_state_modeling.py
+python day-1/step01_sessionize.py                    # prerequisite
+python day-1/step03_behavioral_state_modeling.py
 ```
 
 Needs `hmmlearn` (vendored under `marketing-behavioral-labs/day1/.vendor` if not installed in the env).

@@ -1,14 +1,14 @@
-# Learner guide — DuckDB SQL sessionization (`sessionize_duckdb_sql.py`)
+# Learner guide — DuckDB SQL sessionization (`step01b_sessionize_duckdb_sql.py`)
 
 ## Goal
 
-Same **30-minute inactivity** sessionization as pandas `sessionize.py`, but implemented in **SQL over Parquet** with DuckDB. Optional parallel path for SQL learners.
+Same **30-minute inactivity** sessionization as pandas `step01_sessionize.py`, but implemented in **SQL over Parquet** with DuckDB. Optional parallel path for SQL learners.
 
 ## How to run
 
 ```bash
 conda activate awsproject
-python day-1/sessionize_duckdb_sql.py
+python day-1/step01b_sessionize_duckdb_sql.py
 ```
 
 Requires: `duckdb`, and `day-1/data/web_events.parquet` (or generate parquet from CSV).
@@ -39,4 +39,4 @@ Same logical fields as CSV sessionize: cookie, timestamp, event, content, device
 
 ## Note
 
-Downstream Day‑1 scripts (`journey_analysis`, HMM, features, segmentation) expect the **CSV** outputs from `sessionize.py`. Use this file to practice SQL sessionization; keep CSV path for the rest of the lab unless you adapt loaders.
+Downstream Day‑1 scripts (`journey_analysis`, HMM, features, segmentation) expect the **CSV** outputs from `step01_sessionize.py`. Use this file to practice SQL sessionization; keep CSV path for the rest of the lab unless you adapt loaders.

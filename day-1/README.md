@@ -15,21 +15,21 @@ Raw data lives in `day-1/data/`. Outputs go to `day-1/output/`.
 
 | Step | Script | Learner guide |
 |------|--------|----------------|
-| 1 | `sessionize.py` | [README_01_sessionize.md](README_01_sessionize.md) |
-| 1b (optional) | `sessionize_duckdb_sql.py` | [README_01b_sessionize_duckdb.md](README_01b_sessionize_duckdb.md) |
-| 2 | `journey_analysis.py` | [README_02_journey_analysis.md](README_02_journey_analysis.md) |
-| 3 | `behavioral_state_modeling.py` | [README_03_behavioral_state_modeling.md](README_03_behavioral_state_modeling.md) |
-| 4 | `feature_engineering.py` | [README_04_feature_engineering.md](README_04_feature_engineering.md) |
-| 5 | `behavioral_segmentation.py` | [README_05_behavioral_segmentation.md](README_05_behavioral_segmentation.md) |
+| 1 | `step01_sessionize.py` | [step01_sessionize.md](step01_sessionize.md) |
+| 1b (optional) | `step01b_sessionize_duckdb_sql.py` | [step01b_sessionize_duckdb.md](step01b_sessionize_duckdb.md) |
+| 2 | `step02_journey_analysis.py` | [step02_journey_analysis.md](step02_journey_analysis.md) |
+| 3 | `step03_behavioral_state_modeling.py` | [step03_behavioral_state_modeling.md](step03_behavioral_state_modeling.md) |
+| 4 | `step04_feature_engineering.py` | [step04_feature_engineering.md](step04_feature_engineering.md) |
+| 5 | `step05_behavioral_segmentation.py` | [step05_behavioral_segmentation.md](step05_behavioral_segmentation.md) |
 
 ## Full run (CSV path)
 
 ```bash
-python day-1/sessionize.py
-python day-1/journey_analysis.py
-python day-1/behavioral_state_modeling.py   # optional but recommended before features
-python day-1/feature_engineering.py
-python day-1/behavioral_segmentation.py
+python day-1/step01_sessionize.py
+python day-1/step02_journey_analysis.py
+python day-1/step03_behavioral_state_modeling.py   # optional but recommended before features
+python day-1/step04_feature_engineering.py
+python day-1/step05_behavioral_segmentation.py
 ```
 
 ## Concepts to keep straight

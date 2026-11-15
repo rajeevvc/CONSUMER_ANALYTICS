@@ -1,4 +1,4 @@
-# Learner guide — Behavioral segmentation (`behavioral_segmentation.py`)
+# Learner guide — Behavioral segmentation (`step05_behavioral_segmentation.py`)
 
 ## Goal
 
@@ -14,8 +14,8 @@ Compare both on the same scaled feature matrix and profile the segments.
 
 ```bash
 conda activate awsproject
-python day-1/feature_engineering.py      # prerequisite
-python day-1/behavioral_segmentation.py
+python day-1/step04_feature_engineering.py      # prerequisite
+python day-1/step05_behavioral_segmentation.py
 ```
 
 ## Input
