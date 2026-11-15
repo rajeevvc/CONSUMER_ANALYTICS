@@ -122,20 +122,10 @@ On a single-day toy, `days_active` is 0 and `recency_days` is small offsets betw
 
 ## What `main()` prints
 
-| Section | Content |
-|---------|---------|
-| OUTPUT 1 | Session feature table + row walk |
-| OUTPUT 2 | User feature table + row walk |
-| OUTPUT 3 | Acceptance checks |
-
-### Acceptance expectations
-
-| Check | Expect |
-|-------|--------|
-| `n_sessions` unique | `{1}` |
-| A0004 `conversion_rate` | `1.0` |
-| A0001 `mean_furthest_rank` | `1.0` |
-| A0004 `mean_furthest_rank` | `5.0` |
+| Block | Content |
+|-------|---------|
+| **RAW** | Input events |
+| **PROCESSED** | User (cookie) feature vectors |
 
 ---
 
@@ -158,36 +148,18 @@ These are exactly the kinds of columns later passed to `StandardScaler` + cluste
 
 ## Sample terminal output (what you see when you run it)
 
-### OUTPUT 1 — Session features
+### RAW — input events
 
 ```text
- session_idx anonymous_id  duration_sec  n_behavior_events furthest_stage  converted  page_view  scroll  engaged_read
-           1        A0001           0.0                  1        landing      False          1       0             0
-           2        A0002          60.0                  3        engaged      False          1       1             1
-           3        A0003         150.0                  5         intent      False          1       1             1
-           4        A0004         240.0                  6           deep       True          1       1             1
-
-Row-by-row
-  S1 (A0001): duration=0s, events=1, furthest=landing, converted=0
-  S2 (A0002): duration=60s, events=3, furthest=engaged, converted=0
-  S3 (A0003): duration=150s, events=5, furthest=intent, converted=0
-  S4 (A0004): duration=240s, events=6, furthest=deep, converted=1
+ session_idx anonymous_id           timestamp          event_name        stage
+           1        A0001 2026-01-10 10:00:00           page_view      landing
+           …
+           4        A0004 … deep / subscription …
 ```
 
-**How to read it:** One scorecard per visit.
+**How to read it:** Same toy journeys as Funnel/HMM.
 
-| Row | Story |
-|-----|--------|
-| S1 | Bounce: 0s duration, only landing |
-| S2 | Short engaged read (60s, 3 events) |
-| S3 | Longer intent path (150s) but did not convert |
-| S4 | Deepest + `converted=True` |
-
-`page_view` / `scroll` / `engaged_read` columns are raw counts inside that visit.
-
----
-
-### OUTPUT 2 — User features (cookie grain)
+### PROCESSED — user features (cookie grain)
 
 ```text
 anonymous_id  n_sessions  mean_duration_sec  mean_furthest_rank  share_intent  share_deep  subscription_view_rate  conversion_rate  recency_days
@@ -195,33 +167,11 @@ anonymous_id  n_sessions  mean_duration_sec  mean_furthest_rank  share_intent  s
        A0002           1               60.0                 3.0           0.0         0.0                   0.000              0.0         0.083
        A0003           1              150.0                 4.0           1.0         0.0                   0.200              0.0         0.042
        A0004           1              240.0                 5.0           0.0         1.0                   0.167              1.0         0.000
+
+Note: A0001 depth=1 / convert=0; A0004 depth=5 / convert=1.0.
 ```
 
-**How to read it:** One vector per cookie — this is what segmentation will cluster later.
-
-| Column | This run |
-|--------|----------|
-| `n_sessions` | Always 1 (toy has one visit per cookie) |
-| `mean_furthest_rank` | 1→5 from bounce to converter |
-| `share_intent` | 1.0 only for A0003 (furthest stage was intent) |
-| `share_deep` | 1.0 only for A0004 |
-| `conversion_rate` | 1.0 only for A0004 |
-| `recency_days` | Tiny offsets on the same calendar day (A0004 is newest → 0) |
-
----
-
-### OUTPUT 3 — Acceptance checks
-
-```text
-  n_sessions unique values = [1]
-  A0004 conversion_rate = 1.0  (expect 1.0)
-  A0001 mean_furthest_rank = 1.0  (expect 1.0 landing)
-  A0004 mean_furthest_rank = 5.0  (expect 5.0 deep)
-```
-
-**How to read it:** Confirms bounce vs converter poles of the feature space.
-
----
+**How to read it:** One numeric vector per cookie — this is what segmentation clusters.
 
 ## Next step
 

@@ -160,79 +160,21 @@ def _section(title: str) -> None:
 
 def main() -> None:
     _section("SEGMENTATION — K-Means + GMM")
-    print("Goal: group cookies into audience segments from feature vectors.")
+    print("Goal: raw user features → named audience segment per cookie.")
     users = toy_audience()
 
-    print("\nAlgorithm steps")
-    print("  1. Take user-level numeric features")
-    print("  2. StandardScaler (so seconds and rates are comparable)")
-    print("  3. Pick k via silhouette (here designed truth is 3 groups)")
-    print("  4. Fit K-Means (hard clusters) and GMM (soft mixture → argmax)")
-    print("  5. Name segments from profile means (converters / readers / bouncers)")
-
-    _section("OUTPUT 1 — Toy audience (ground-truth personas)")
-    print("Column meanings")
-    print("  persona               designed label (not used for fitting)")
-    print("  mean_furthest_rank    average journey depth")
-    print("  conversion_rate       share of converting sessions")
-    print("\nFull toy table (key columns)")
-    print(users[["anonymous_id", "persona", "mean_furthest_rank", "conversion_rate", "share_deep"]].to_string(index=False))
-    print("\nPersona counts")
-    print(users["persona"].value_counts().to_string())
+    _section("RAW — toy audience features")
+    print(
+        users[
+            ["anonymous_id", "persona", "mean_furthest_rank", "conversion_rate", "share_deep"]
+        ].to_string(index=False)
+    )
 
     labeled = fit_segmentation(users)
-    _section("OUTPUT 2 — Model selection diagnostics")
-    print(f"  Chosen k = {labeled.attrs['k']}")
-    print("  Silhouette by k:")
-    for k, score in labeled.attrs["silhouette_scores"]:
-        mark = " ← chosen" if k == labeled.attrs["k"] else ""
-        print(f"    k={k}: silhouette={score:.3f}{mark}")
-    print(f"  GMM BIC = {labeled.attrs['gmm_bic']:.1f}  (lower is better for model comparison)")
-
-    _section("OUTPUT 3 — Assignments")
-    print("Column meanings")
-    print("  persona        ground truth (for teaching only)")
-    print("  kmeans_label   hard cluster name from K-Means")
-    print("  gmm_label      soft-mixture argmax name from GMM")
-    print("\nFull assignment table")
+    _section("PROCESSED — segment assignments")
     print(labeled[["anonymous_id", "persona", "kmeans_label", "gmm_label"]].to_string(index=False))
-    print("\nAgreement check (persona family vs kmeans_label)")
-    persona_family = labeled["persona"].str.replace("_truth", "", regex=False)
-    label_family = labeled["kmeans_label"].map(
-        {
-            "bouncers": "bouncer",
-            "regular_readers": "reader",
-            "converters": "converter",
-        }
-    )
-    agree = (persona_family == label_family).mean()
-    print(f"  match rate = {agree:.2%}  (toy is designed to recover cleanly)")
-
-    km = profile(labeled, "kmeans_segment", "kmeans_label")
-    gm = profile(labeled, "gmm_segment", "gmm_label")
-    _section("OUTPUT 4 — Segment profiles")
-    print("Column meanings")
-    print("  readers              cookies in the segment")
-    print("  mean_furthest_rank   average depth of the group")
-    print("  conversion_rate      average conversion of the group")
-    print("  share_deep           average deep-reach share")
-    print("\nK-Means profiles")
-    print(km.to_string(index=False))
-    print("\nGMM profiles")
-    print(gm.to_string(index=False))
-    print("\nProfile reading")
-    for row in km.itertuples(index=False):
-        print(f"  {row.label}: n={row.readers}, depth={row.mean_furthest_rank}, "
-              f"conv={row.conversion_rate}, deep={row.share_deep}")
-
-    _section("OUTPUT 5 — Acceptance checks")
-    print(f"  k = {labeled.attrs['k']}  (expect 3)")
-    print(f"  distinct kmeans labels = {sorted(labeled['kmeans_label'].unique().tolist())}")
-    print(f"  distinct gmm labels    = {sorted(labeled['gmm_label'].unique().tolist())}")
-
-    _section("Teaching takeaway")
-    print("  Segmentation answers: 'What kind of audience is this cookie?'")
-    print("  Needs feature engineering first; HMM modes are optional extras.")
+    print(f"\nNote: chosen k={labeled.attrs['k']}; "
+          "toy recovers bouncers / regular_readers / converters (K-Means and GMM agree).")
 
 
 if __name__ == "__main__":

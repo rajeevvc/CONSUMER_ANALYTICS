@@ -71,7 +71,7 @@ The examples **do not** read `day-1/data/web_events.csv`. Inputs are defined **i
 
 ## Deep code walkthroughs
 
-Each example `.py` has a paired `.md` that explains every function, input, and constant, plus a **Sample terminal output** section showing real run results and how to read them.
+Each example `.py` has a paired `.md` that explains every function, input, and constant. Terminal output is kept simple: **RAW** input, then one **PROCESSED** result (see each walkthrough’s sample section).
 
 | Code | Deep README |
 |------|-------------|

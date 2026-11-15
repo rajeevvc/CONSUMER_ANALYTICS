@@ -170,67 +170,20 @@ Exact labels can flip if EM lands in a symmetric solution; naming by skim mass k
 
 ## Sample terminal output (what you see when you run it)
 
-### OUTPUT 1 — Observation alphabet
+### RAW — browse events
 
 ```text
-  Codes used for CategoricalHMM:
-    0 = page_view
-    1 = scroll
-    2 = engaged_read
-    3 = subscription_view
-    4 = subscribe_click
-    5 = checkout_start
-    6 = payment_success
-
-Events kept for training (conversion outcomes dropped)
  session_idx        event_name   stage
            1         page_view landing
+           2         page_view landing
+           2            scroll  scroll
            …
            4   payment_success    deep
 ```
 
-**How to read it:** The model only sees integer codes 0–6. `subscription_active` is gone (conversion outcome). 15 browse events remain across 4 sessions.
+**How to read it:** Conversion outcomes are dropped; these rows are what the HMM fits.
 
----
-
-### OUTPUT 2 — Learned emissions P(event | mode)
-
-```text
-          mode  page_view  scroll  engaged_read  subscription_view  subscribe_click  checkout_start  payment_success
-exploring_like        0.0   0.273         0.273              0.182            0.091           0.091            0.091
- skimming_like        1.0   0.000         0.000              0.000            0.000           0.000            0.000
-
-Mode naming
-  state 0 → exploring_like  (page_view+scroll mass=0.273)
-  state 1 → skimming_like  (page_view+scroll mass=1.000)
-```
-
-**How to read it:** Each row is a latent mode; cells are “if I’m in this mode, how likely is this event?”
-
-- `skimming_like` puts **all** mass on `page_view` (mass on page_view+scroll = 1.0).
-- `exploring_like` spreads mass across scroll / engaged / intent / deep events.
-
-Exact decimals can shift slightly with EM, but the naming rule (who has more skim mass) keeps labels interpretable.
-
----
-
-### OUTPUT 3 — Transition matrix + start π
-
-```text
-                exploring_like  skimming_like
-exploring_like             1.0            0.0
-skimming_like              1.0            0.0
-
-Start probabilities π
-  P(start in exploring_like) = 0.000
-  P(start in skimming_like) = 1.000
-```
-
-**How to read it:** Visits **start** in skimming. From skimming they move to exploring (`skimming→exploring = 1.0`). Once exploring, they **stay** exploring (`exploring→exploring = 1.0`). That matches “land with a page_view, then dig in.”
-
----
-
-### OUTPUT 4 — Decoded events (Viterbi)
+### PROCESSED — decoded events (`hmm_mode`)
 
 ```text
  session_idx        event_name       hmm_mode
@@ -241,28 +194,10 @@ Start probabilities π
            …
            4   payment_success exploring_like
 
-Per-session mode path
-  S1: skimming_like
-  S2: skimming_like → exploring_like → exploring_like
-  S3: skimming_like → exploring_like → … → exploring_like
-  S4: skimming_like → exploring_like → … → exploring_like
+Note: 2 modes; page_view usually skimming_like, deeper clicks exploring_like.
 ```
 
-**How to read it:** Viterbi assigns the most likely mode **per event**. Bounce S1 never leaves skimming. Longer visits switch to exploring after the first `page_view` and stay there. This is *learned* state, not the rule-based funnel `stage` column.
-
----
-
-### OUTPUT 5 — Acceptance checks
-
-```text
-  n_components = 2  (expect 2)
-  decoded rows = 15  (expect 15)
-  modes named  = ['exploring_like', 'skimming_like']
-```
-
-**How to read it:** Confirms 2 modes, all browse rows decoded, both labels present.
-
----
+**How to read it:** Each event gets a learned mode. Bounce stays skimming; longer visits switch to exploring after the first page_view.
 
 ## What to take into the lab
 

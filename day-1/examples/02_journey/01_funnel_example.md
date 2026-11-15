@@ -139,28 +139,19 @@ S1 ends at landing; S2 at engaged; S3 at intent; S4 reaches subscription (ends t
 
 ## Sample terminal output (what you see when you run it)
 
-### OUTPUT 1 — Input events with stages
+### RAW — input events with stages
 
 ```text
  session_idx anonymous_id           timestamp          event_name        stage
            1        A0001 2026-01-10 10:00:00           page_view      landing
-           2        A0002 2026-01-10 11:00:00           page_view      landing
-           2        A0002 2026-01-10 11:00:30              scroll       scroll
-           …
-           4        A0004 2026-01-10 13:05:00 subscription_active subscription
-
-Per-session stages touched
-  S1: landing
-  S2: landing → scroll → engaged
-  S3: landing → scroll → engaged → intent
-  S4: landing → scroll → engaged → intent → deep → subscription
+           2        A0002 … scroll / engaged_read …
+           3        A0003 … intent …
+           4        A0004 … deep / subscription …
 ```
 
-**How to read it:** Each event already has a `stage`. The per-session chains show depth without yet computing rates — S1 never leaves landing; S4 reaches the top of the ladder.
+**How to read it:** Each click already has a funnel `stage`.
 
----
-
-### OUTPUT 2 — Funnel table
+### PROCESSED — funnel table
 
 ```text
        stage  events  sessions_containing_stage  sessions_ending_here   next_stage  advance_rate
@@ -171,49 +162,11 @@ Per-session stages touched
         deep       2                          1                     0 registration        0.0000
 registration       0                          0                     0 subscription           NaN
 subscription       1                          1                     1          NaN           NaN
+
+Note: landing→scroll = 0.75; intent→deep = 0.50 (cliff).
 ```
 
-**How to read each column:**
-
-| Column | This run means |
-|--------|----------------|
-| `events` | How many clicks mapped to that stage (intent has 3 events across S3+S4) |
-| `sessions_containing_stage` | How many visits *ever* hit it (landing=4, intent=2) |
-| `sessions_ending_here` | Whose furthest stage is here (1 bounce at landing, 1 stuck at intent, …) |
-| `advance_rate` | Of those who hit this stage, what share also hit the *next* rung |
-
-**Key story in the numbers:** landing→scroll advance `0.75` (3 of 4 scrolled). intent→deep advance `0.50` — the **cliff**: half of intent visits never reach checkout depth.
-
----
-
-### OUTPUT 3 — Row-by-row reading
-
-```text
-  landing
-    events=4, sessions_with_stage=4, ended_here=1
-    next=scroll, advance_rate=0.75
-    interpret: 4 sessions landed; 3 also scrolled → 0.75
-
-  intent
-    events=3, sessions_with_stage=2, ended_here=1
-    next=deep, advance_rate=0.5
-    interpret: 2 sessions reached intent; only 1 also hit deep → 0.50 (cliff)
-```
-
-**How to read it:** Same table, narrated. `ended_here=1` at intent is S3 (looked at subscribe UI, left). S4 is the one that also hit deep.
-
----
-
-### OUTPUT 4 — Acceptance checks
-
-```text
-  landing advance_rate = 0.75  (expect 0.75)
-  intent advance_rate  = 0.5  (expect 0.50)
-```
-
-**How to read it:** Confirms the two teaching numbers. If these fail, the stage tags or presence logic drifted.
-
----
+**How to read it:** `advance_rate` = share of sessions that ever also hit the next rung. The intent row (`0.50`) is the cliff.
 
 ## What to take into the lab
 

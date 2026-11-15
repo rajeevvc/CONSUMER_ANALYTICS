@@ -150,14 +150,6 @@ from toy_raw_events import describe_raw, load_raw_events
 
 ---
 
-### 5. Narration helpers (`_section`, `_explain_*`, `_walk_*`)
-
-These only print. They do not change the algorithm. They teach:
-
-- column meanings
-- gap → new-session decisions row by row
-- acceptance checks (expected counts)
-
 ---
 
 ## `main()` pipeline (what runs)
@@ -168,120 +160,49 @@ raw events
   → sessionize          (event table + session_id + stage)
   → session_summary     (one row per visit)
   → attach_conversion_label
-  → print OUTPUT 1…5
+  → print RAW + PROCESSED only
 ```
 
-| Output | What you should learn |
-|--------|------------------------|
-| OUTPUT 1 | Raw input shape |
-| OUTPUT 2 | Dedupe effect |
-| OUTPUT 3 | Event membership in sessions |
-| OUTPUT 4 | Visit scorecard |
-| OUTPUT 5 | Hand-check numbers |
+| Printed block | What you see |
+|---------------|--------------|
+| **RAW** | Input clickstream |
+| **PROCESSED** | One session scorecard row per visit |
 
 ---
 
 ## Sample terminal output (what you see when you run it)
 
-Below is the real output from a successful run, with notes on how to read it.
+The script prints **two** blocks only: **RAW** then **PROCESSED**.
 
-### OUTPUT 1 — Raw input events
+### RAW — input events
 
 ```text
-Count: 19 rows from toy_raw_events.load_raw_events()
 anonymous_id           timestamp          event_name content_id device_type       referrer
        A0001 2026-01-10 10:00:00           page_view       C001     desktop organic_search
        A0001 2026-01-10 10:00:01           page_view       C001     desktop organic_search
        A0001 2026-01-10 10:05:00              scroll       C001     desktop            NaN
        A0001 2026-01-10 10:40:00           page_view       C002     desktop         direct
-       … (A0002–A0004 continue) …
+       … (A0002–A0004) …
        A0004 2026-01-10 13:05:00 subscription_active        NaN     desktop            NaN
 ```
 
-**How to read it:** These are *unsessionized* clicks. Spot the teaching traps: A0001’s two `page_view` rows one second apart (duplicate), and A0001’s jump from `10:05` to `10:40` (35-minute idle → new visit later).
+**How to read it:** Unsessionized clicks. A0001 has a 1-second duplicate and a 35-minute idle before the next page_view.
 
----
-
-### OUTPUT 2 — After near-duplicate drop
+### PROCESSED — session summary
 
 ```text
-Kept 18 of 19 events  (dropped 1)
-Rule: same cookie + same event_name + same content_id + gap ≤ 2 seconds → drop.
-Dropped row(s): A0001 page_view at 10:00:01 on C001 (duplicate of 10:00:00).
+session_id anonymous_id       session_start  duration_sec  n_behavior_events furthest_stage  converted
+S000000001        A0001 2026-01-10 10:00:00         300.0                  2         scroll      False
+S000000002        A0001 2026-01-10 10:40:00           0.0                  1        landing      False
+S000000003        A0002 2026-01-10 11:00:00          60.0                  3        engaged      False
+S000000004        A0003 2026-01-10 12:00:00         150.0                  5         intent      False
+S000000005        A0004 2026-01-10 13:00:00         240.0                  6           deep       True
+
+Note: 19 raw events → 18 after 2s dedupe → 5 sessions (30-min gap).
+A0001 splits into 2 visits; only S000000005 converted.
 ```
 
-**How to read it:** Noise removal succeeded. One row gone; the 10:40 event is still present (it is *not* a duplicate — different time and content).
-
----
-
-### OUTPUT 3 — Sessionized event table
-
-```text
-anonymous_id           timestamp          event_name  gap_seconds session_id        stage  is_conversion
-       A0001 2026-01-10 10:00:00           page_view          NaN S000000001      landing          False
-       A0001 2026-01-10 10:05:00              scroll        300.0 S000000001       scroll          False
-       A0001 2026-01-10 10:40:00           page_view       2100.0 S000000002      landing          False
-       A0002 2026-01-10 11:00:00           page_view          NaN S000000003      landing          False
-       … 
-       A0004 2026-01-10 13:05:00 subscription_active         60.0 S000000005 subscription           True
-```
-
-**How to read key columns:**
-
-| You see | Means |
-|---------|--------|
-| `gap_seconds = NaN` | First event for that cookie → always a new session |
-| `gap_seconds = 300` | 5 minutes idle → still same visit (`≤ 1800`) |
-| `gap_seconds = 2100` | 35 minutes idle → **new** `session_id` |
-| `session_id` | Visit membership for later labs |
-| `stage` | Funnel tag for this click |
-| `is_conversion = True` | Outcome event (`subscription_active`), not browse depth |
-
-Row-by-row narration for A0001 ends with:
-
-```text
-    2026-01-10 10:40:00  page_view  gap=2100s > 1800s (30 min) → idle too long
-      → NEW SESSION: S000000002  (stage=landing)
-      ★ session changed: S000000001 → S000000002
-```
-
-That star line is the 30-minute rule firing.
-
----
-
-### OUTPUT 4 — Session summary table
-
-```text
-session_id anonymous_id       session_start  duration_sec  n_behavior_events furthest_stage  furthest_rank  converted  already_converted
-S000000001        A0001 2026-01-10 10:00:00         300.0                  2         scroll              2      False              False
-S000000002        A0001 2026-01-10 10:40:00           0.0                  1        landing              1      False              False
-S000000003        A0002 2026-01-10 11:00:00          60.0                  3        engaged              3      False              False
-S000000004        A0003 2026-01-10 12:00:00         150.0                  5         intent              4      False              False
-S000000005        A0004 2026-01-10 13:00:00         240.0                  6           deep              5       True              False
-```
-
-**How to read it:**
-
-- **5 rows** = 5 visits (A0001 contributes two because of the 35-minute cut).
-- `S000000002` has `duration_sec = 0` and `furthest_stage = landing` — a one-click revisit.
-- `S000000005` is the only `converted = True` row (A0004 subscribed within the 7-day horizon).
-- `furthest_stage` ignores the conversion label itself for depth; A0004’s browse depth is `deep` (rank 5).
-
----
-
-### OUTPUT 5 — Acceptance checks
-
-```text
-  A0001 session count     = 2  (expect 2)
-  A0001 10:40 gap_seconds = 2100  (expect 2100 > 1800 → new session)
-  Events after dedupe     = 18  (expect 18; raw had 19)
-  Converted session_ids   = ['S000000005']  (expect ['S000000005'])
-  Total sessions          = 5  (expect 5)
-```
-
-**How to read it:** If every line matches the “expect” value, your understanding of the rules matches the code. If something differs, the walkthrough above shows where to look.
-
----
+**How to read it:** One row per visit. A0001 appears twice (30-min cut). Only A0004’s visit is `converted=True`.
 
 ## Hand checks you should get
 

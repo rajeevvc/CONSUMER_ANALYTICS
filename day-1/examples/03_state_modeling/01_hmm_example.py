@@ -87,73 +87,19 @@ def _section(title: str) -> None:
 
 def main() -> None:
     _section("HMM — latent reading modes (toy 2-state demo)")
-    print("Goal: learn hidden modes that explain event sequences.")
+    print("Goal: raw browse events → Viterbi mode label per event.")
     describe_sessions()
     events = load_toy_events()
 
-    print("\nAlgorithm steps")
-    print("  1. Encode event_name → integer observation codes")
-    print("  2. Drop conversion outcomes (not browsing behavior)")
-    print("  3. Initialize start/transition/emission randomly (seeded)")
-    print("  4. EM (Baum–Welch) learns P(event|mode) and P(mode→mode)")
-    print("  5. Viterbi assigns the most likely mode to each event")
-    print("\nLab note: Day 1 uses 4 modes + 12 events + 6 random restarts.")
-    print("  This example uses 2 modes so the toy data stays readable.")
-
-    _section("OUTPUT 1 — Observation alphabet")
-    print("  Codes used for CategoricalHMM:")
-    for i, name in enumerate(OBS):
-        print(f"    {i} = {name}")
-    print("\nEvents kept for training (conversion outcomes dropped)")
+    _section("RAW — browse events (conversion outcomes dropped)")
     work = events.loc[~events["event_name"].isin(CONVERSION)].copy()
     print(work[["session_idx", "event_name", "stage"]].to_string(index=False))
 
     model, decoded, names = fit_and_decode(events)
-
-    _section("OUTPUT 2 — Learned emissions P(event | mode)")
-    print("How to read: each ROW is a mode; cells are P(emit that event | mode).")
-    print("Mode labels come from which mode puts more mass on page_view+scroll.")
-    emit = pd.DataFrame(model.emissionprob_, columns=OBS)
-    emit.insert(0, "mode", [names[i] for i in range(model.n_components)])
-    print("\nFull emission table")
-    print(emit.round(3).to_string(index=False))
-    print("\nMode naming")
-    for i in range(model.n_components):
-        skim = float(model.emissionprob_[i, OBS.index("page_view")] + model.emissionprob_[i, OBS.index("scroll")])
-        print(f"  state {i} → {names[i]}  (page_view+scroll mass={skim:.3f})")
-
-    _section("OUTPUT 3 — Transition matrix P(next mode | current)")
-    trans = pd.DataFrame(
-        model.transmat_,
-        index=[names[i] for i in range(2)],
-        columns=[names[i] for i in range(2)],
-    )
-    print("Rows sum ≈ 1.0. High diagonal = mode persistence.")
-    print(trans.round(3).to_string())
-    print("\nStart probabilities π")
-    for i, p in enumerate(model.startprob_):
-        print(f"  P(start in {names[i]}) = {p:.3f}")
-
-    _section("OUTPUT 4 — Decoded events (Viterbi)")
-    print("Column meanings")
-    print("  session_idx  visit id")
-    print("  event_name   observation")
-    print("  hmm_mode     most likely latent mode at that step")
-    print("\nFull decode")
+    _section("PROCESSED — decoded events (hmm_mode)")
     print(decoded[["session_idx", "event_name", "hmm_mode"]].to_string(index=False))
-    print("\nPer-session mode path")
-    for sid, part in decoded.groupby("session_idx", sort=True):
-        path = " → ".join(part["hmm_mode"].tolist())
-        print(f"  S{sid}: {path}")
-
-    _section("OUTPUT 5 — Acceptance checks")
-    print(f"  n_components = {model.n_components}  (expect 2)")
-    print(f"  decoded rows = {len(decoded)}  (expect {len(work)})")
-    print(f"  modes named  = {sorted(set(names.values()))}")
-
-    _section("Teaching takeaway")
-    print("  HMM answers: 'What reading mode is happening inside the visit?'")
-    print("  Different from Funnel/Markov stages (rules) — modes are learned.")
+    print(f"\nNote: {model.n_components} learned modes {sorted(set(names.values()))}; "
+          "page_view usually skimming_like, deeper clicks exploring_like.")
 
 
 if __name__ == "__main__":
