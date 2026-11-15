@@ -69,6 +69,21 @@ The examples **do not** read `day-1/data/web_events.csv`. Inputs are defined **i
 | `04_feature_engineering/` | `step04_feature_engineering.py` | Session → user rollup |
 | `05_segmentation/` | `step05_behavioral_segmentation.py` | K-Means, GMM |
 
+## Deep code walkthroughs
+
+Each example `.py` has a paired `.md` that explains every function, input, constant, and output.
+
+| Code | Deep README |
+|------|-------------|
+| `_shared/` toy loaders | [`_shared/README.md`](_shared/README.md) |
+| `01_sessionize/01_sessionize_example.py` | [`01_sessionize/01_sessionize_example.md`](01_sessionize/01_sessionize_example.md) |
+| `02_journey/01_funnel_example.py` | [`02_journey/01_funnel_example.md`](02_journey/01_funnel_example.md) |
+| `02_journey/02_markov_example.py` | [`02_journey/02_markov_example.md`](02_journey/02_markov_example.md) |
+| `02_journey/03_dfg_example.py` | [`02_journey/03_dfg_example.md`](02_journey/03_dfg_example.md) |
+| `03_state_modeling/01_hmm_example.py` | [`03_state_modeling/01_hmm_example.md`](03_state_modeling/01_hmm_example.md) |
+| `04_feature_engineering/01_feature_engineering_example.py` | [`04_feature_engineering/01_feature_engineering_example.md`](04_feature_engineering/01_feature_engineering_example.md) |
+| `05_segmentation/01_segmentation_example.py` | [`05_segmentation/01_segmentation_example.md`](05_segmentation/01_segmentation_example.md) |
+
 ## How they connect
 
 ```
