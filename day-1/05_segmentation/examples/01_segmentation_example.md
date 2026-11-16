@@ -12,12 +12,47 @@ Toy twin of `step05_behavioral_segmentation.py` — three planted groups (bounce
 python day-1/05_segmentation/examples/01_segmentation_example.py
 ```
 
-## Input / Output (terminal)
+## Sample input & output
 
-| Section | What you see |
-|---------|----------------|
-| **RAW** | Hand-built user features + truth `persona` |
-| **PROCESSED** | `kmeans_label` and `gmm_label` per cookie |
+Source: `_shared/data/toy_audience.csv`.
+
+### INPUT (RAW)
+
+```text
+anonymous_id         persona  mean_furthest_rank  conversion_rate  share_deep
+          B1   bouncer_truth                 1.0              0.0         0.0
+          B2   bouncer_truth                 1.0              0.0         0.0
+          B3   bouncer_truth                 1.0              0.0         0.0
+          B4   bouncer_truth                 1.0              0.0         0.0
+          R1    reader_truth                 3.0              0.0         0.0
+          R2    reader_truth                 3.2              0.0         0.0
+          R3    reader_truth                 3.4              0.0         0.0
+          R4    reader_truth                 3.6              0.0         0.0
+          C1 converter_truth                 4.5              0.4         0.3
+          C2 converter_truth                 4.6              0.5         0.3
+          C3 converter_truth                 4.7              0.6         0.3
+          C4 converter_truth                 4.8              0.7         0.3
+```
+
+### OUTPUT (PROCESSED)
+
+```text
+anonymous_id         persona    kmeans_label       gmm_label
+          B1   bouncer_truth        bouncers        bouncers
+          B2   bouncer_truth        bouncers        bouncers
+          B3   bouncer_truth        bouncers        bouncers
+          B4   bouncer_truth        bouncers        bouncers
+          R1    reader_truth regular_readers regular_readers
+          R2    reader_truth regular_readers regular_readers
+          R3    reader_truth regular_readers regular_readers
+          R4    reader_truth regular_readers regular_readers
+          C1 converter_truth      converters      converters
+          C2 converter_truth      converters      converters
+          C3 converter_truth      converters      converters
+          C4 converter_truth      converters      converters
+```
+
+**Read it:** chosen k=3; both methods recover bouncers / regular_readers / converters. `persona` is truth-only (not used by the model).
 
 ---
 
@@ -53,7 +88,7 @@ toy_audience()          loads _shared/data/toy_audience.csv
 
 ### `toy_audience()`
 
-**Job:** Build 12 cookies in 3 obvious groups with different depth/conversion patterns.
+**Job:** Load 12 cookies in 3 obvious groups from `toy_audience.csv`.
 
 ### `name_segment(part)`
 

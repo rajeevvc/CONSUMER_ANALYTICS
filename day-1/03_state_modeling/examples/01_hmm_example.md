@@ -14,12 +14,53 @@ python day-1/03_state_modeling/examples/01_hmm_example.py
 
 Needs `hmmlearn` (vendored under `marketing-behavioral-labs/day1/.vendor` if missing).
 
-## Input / Output (terminal)
+## Sample input & output
 
-| Section | What you see |
-|---------|----------------|
-| **RAW** | Browse events (conversions dropped) |
-| **PROCESSED** | Same events + `hmm_mode` |
+Source: `_shared/data/toy_sessions.csv` (conversion outcomes dropped before fit/decode).
+
+### INPUT (RAW)
+
+```text
+ session_idx        event_name   stage
+           1         page_view landing
+           2         page_view landing
+           2            scroll  scroll
+           2      engaged_read engaged
+           3         page_view landing
+           3            scroll  scroll
+           3      engaged_read engaged
+           3 subscription_view  intent
+           3   subscribe_click  intent
+           4         page_view landing
+           4            scroll  scroll
+           4      engaged_read engaged
+           4 subscription_view  intent
+           4    checkout_start    deep
+           4   payment_success    deep
+```
+
+### OUTPUT (PROCESSED)
+
+```text
+ session_idx        event_name       hmm_mode
+           1         page_view  skimming_like
+           2         page_view  skimming_like
+           2            scroll exploring_like
+           2      engaged_read exploring_like
+           3         page_view  skimming_like
+           3            scroll exploring_like
+           3      engaged_read exploring_like
+           3 subscription_view exploring_like
+           3   subscribe_click exploring_like
+           4         page_view  skimming_like
+           4            scroll exploring_like
+           4      engaged_read exploring_like
+           4 subscription_view exploring_like
+           4    checkout_start exploring_like
+           4   payment_success exploring_like
+```
+
+**Read it:** 2 modes — `page_view` usually `skimming_like`; deeper clicks `exploring_like`.
 
 ---
 

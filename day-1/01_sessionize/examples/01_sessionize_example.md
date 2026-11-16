@@ -12,14 +12,47 @@ Toy-sized twin of `step01_sessionize.py` — small enough to check by hand.
 python day-1/01_sessionize/examples/01_sessionize_example.py
 ```
 
-## Input / Output (terminal)
+## Sample input & output
 
-| Section | What you see |
-|---------|----------------|
-| **RAW** | Click rows from `_shared/data/toy_raw_events.csv` |
-| **PROCESSED** | One scorecard row per visit |
+Source: `_shared/data/toy_raw_events.csv`. Designed quirks: A0001 has a 1s duplicate (drop) and a 35‑min gap (new session); A0004 converts.
 
-Designed quirks: A0001 has a 1s duplicate (drop) and a 35‑min gap (new session); A0004 converts.
+### INPUT (RAW)
+
+```text
+anonymous_id           timestamp          event_name content_id device_type       referrer
+       A0001 2026-01-10 10:00:00           page_view       C001     desktop organic_search
+       A0001 2026-01-10 10:00:01           page_view       C001     desktop organic_search
+       A0001 2026-01-10 10:05:00              scroll       C001     desktop            NaN
+       A0001 2026-01-10 10:40:00           page_view       C002     desktop         direct
+       A0002 2026-01-10 11:00:00           page_view       C010      mobile social_organic
+       A0002 2026-01-10 11:00:30              scroll       C010      mobile            NaN
+       A0002 2026-01-10 11:01:00        engaged_read       C010      mobile            NaN
+       A0003 2026-01-10 12:00:00           page_view       C020      tablet          email
+       A0003 2026-01-10 12:00:20              scroll       C020      tablet            NaN
+       A0003 2026-01-10 12:01:00        engaged_read       C020      tablet            NaN
+       A0003 2026-01-10 12:02:00   subscription_view       C020      tablet            NaN
+       A0003 2026-01-10 12:02:30     subscribe_click       C020      tablet            NaN
+       A0004 2026-01-10 13:00:00           page_view       C030     desktop organic_search
+       A0004 2026-01-10 13:00:15              scroll       C030     desktop            NaN
+       A0004 2026-01-10 13:01:00        engaged_read       C030     desktop            NaN
+       A0004 2026-01-10 13:02:00   subscription_view       C030     desktop            NaN
+       A0004 2026-01-10 13:03:00      checkout_start       C030     desktop            NaN
+       A0004 2026-01-10 13:04:00     payment_success       C030     desktop            NaN
+       A0004 2026-01-10 13:05:00 subscription_active        NaN     desktop            NaN
+```
+
+### OUTPUT (PROCESSED)
+
+```text
+session_id anonymous_id       session_start  duration_sec  n_behavior_events furthest_stage  converted
+S000000001        A0001 2026-01-10 10:00:00         300.0                  2         scroll      False
+S000000002        A0001 2026-01-10 10:40:00           0.0                  1        landing      False
+S000000003        A0002 2026-01-10 11:00:00          60.0                  3        engaged      False
+S000000004        A0003 2026-01-10 12:00:00         150.0                  5         intent      False
+S000000005        A0004 2026-01-10 13:00:00         240.0                  6           deep       True
+```
+
+**Read it:** 19 raw → 18 after 2s dedupe → **5 sessions**. A0001 splits into 2 visits; only S000000005 converted.
 
 ---
 

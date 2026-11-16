@@ -12,12 +12,37 @@ Toy twin of `step02_journey_analysis.fit_markov`.
 python day-1/02_journey/examples/02_markov_example.py
 ```
 
-## Input / Output (terminal)
+## Sample input & output
 
-| Section | What you see |
-|---------|----------------|
-| **RAW** | Stage sequence per session (`… → exit`) |
-| **PROCESSED** | Transition matrix (rows ≈ probabilities) |
+Source: `_shared/data/toy_sessions.csv`.
+
+### INPUT (RAW)
+
+Stage sequence per session (conversions kept as stages; each visit ends at `exit`):
+
+```text
+  S1: landing → exit
+  S2: landing → scroll → engaged → exit
+  S3: landing → scroll → engaged → intent → intent → exit
+  S4: landing → scroll → engaged → intent → deep → deep → subscription → exit
+```
+
+### OUTPUT (PROCESSED)
+
+Transition matrix — each row ≈ P(next | current), including exit:
+
+```text
+              landing  scroll  engaged  intent   deep  registration  subscription   exit
+landing           0.0    0.75      0.0   0.000  0.000           0.0           0.0  0.250
+scroll            0.0    0.00      1.0   0.000  0.000           0.0           0.0  0.000
+engaged           0.0    0.00      0.0   0.667  0.000           0.0           0.0  0.333
+intent            0.0    0.00      0.0   0.333  0.333           0.0           0.0  0.333
+deep              0.0    0.00      0.0   0.000  0.500           0.0           0.5  0.000
+registration      0.0    0.00      0.0   0.000  0.000           0.0           0.0  0.000
+subscription      0.0    0.00      0.0   0.000  0.000           0.0           0.0  1.000
+```
+
+**Read it:** landing→scroll = 0.75, landing→exit = 0.25 (S1 bounce).
 
 ---
 
@@ -62,4 +87,4 @@ Uses: `describe_sessions()`, `load_toy_events()`.
 
 ## Teaching takeaway
 
-Answer: *“From here, where next — or out?”* (toy: landing→scroll ≈ 0.75, landing→exit ≈ 0.25.)
+Answer: *“From here, where next — or out?”*

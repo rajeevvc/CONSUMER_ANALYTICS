@@ -12,12 +12,42 @@ Toy twin of step02’s DFG helpers.
 python day-1/02_journey/examples/03_dfg_example.py
 ```
 
-## Input / Output (terminal)
+## Sample input & output
 
-| Section | What you see |
-|---------|----------------|
-| **RAW** | Event-name path per session |
-| **PROCESSED** | Aggregated edges with counts + probabilities |
+Source: `_shared/data/toy_sessions.csv`.
+
+### INPUT (RAW)
+
+Event-name path per session:
+
+```text
+  S1: page_view
+  S2: page_view > scroll > engaged_read
+  S3: page_view > scroll > engaged_read > subscription_view > subscribe_click
+  S4: page_view > scroll > engaged_read > subscription_view > checkout_start > payment_success > subscription_active
+```
+
+### OUTPUT (PROCESSED)
+
+Aggregated DFG edges (count + probability leaving `from_activity`):
+
+```text
+      from_activity         to_activity  count  probability
+              START           page_view      4        1.000
+          page_view              scroll      3        0.750
+             scroll        engaged_read      3        1.000
+       engaged_read   subscription_view      2        0.667
+     checkout_start     payment_success      1        1.000
+       engaged_read                 END      1        0.333
+          page_view                 END      1        0.250
+    payment_success subscription_active      1        1.000
+    subscribe_click                 END      1        1.000
+subscription_active                 END      1        1.000
+  subscription_view     subscribe_click      1        0.500
+  subscription_view      checkout_start      1        0.500
+```
+
+**Read it:** every visit START→page_view (4); S1 bounces page_view→END.
 
 ---
 
@@ -29,7 +59,6 @@ Funnel/Markov use **stages**. DFG uses **exact event names** — the street map 
 load_toy_events()
       → directly_follows()   START / A→B / END edges
       → edge_table()         counts + P(to | from)
-      → (journey_variants defined for teaching; main prints edges)
 ```
 
 ---
@@ -71,4 +100,4 @@ Uses: `describe_sessions()`, `load_toy_events()`.
 
 ## Teaching takeaway
 
-Answer: *“Which click paths actually fire, and how often?”* (toy: every visit START→page_view; S1 bounces page_view→END.)
+Answer: *“Which click paths actually fire, and how often?”*
