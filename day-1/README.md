@@ -9,7 +9,12 @@ conda activate awsproject
 cd /path/to/CONSUMERANALYTICS
 ```
 
-Raw data lives in `day-1/data/`. Outputs go to `day-1/output/`.
+Raw data lives in `day-1/data/` (large files via **Git LFS**). Outputs go to `day-1/output/`.
+
+```bash
+git lfs install
+git lfs pull
+```
 
 ## Folder layout (by context)
 
@@ -44,6 +49,8 @@ Each context folder holds:
 | 5 | [`05_segmentation/`](05_segmentation/) | `step05_behavioral_segmentation.py` | [guide](05_segmentation/step05_behavioral_segmentation.md) · [example](05_segmentation/examples/) |
 
 ## Full run (CSV path)
+
+Pull data first if needed (`git lfs pull`), then:
 
 ```bash
 python day-1/01_sessionize/step01_sessionize.py

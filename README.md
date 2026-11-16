@@ -8,20 +8,22 @@ Start with clickstreams, build visits, map journeys, learn latent modes, enginee
 
 | Path | Role |
 |------|------|
-| [`day-1/`](day-1/) | Full Day 1 lab (scripts, guides, toy examples, data stubs) |
-| [`.gitignore`](.gitignore) | Keeps large CSVs / `output/` / sibling trees out of git |
+| [`day-1/`](day-1/) | Full Day 1 lab (scripts, guides, toy examples, data) |
+| [`.gitattributes`](.gitattributes) | Git LFS rules for large `day-1/data` files |
+| [`.gitignore`](.gitignore) | Keeps `output/` / token / sibling trees out of git |
 
 Day 1 is organized **by pipeline context**. Each step folder holds the lab script, learner guide, and toy examples together.
 
 ```
 CONSUMER_ANALYTICS/
 ├── README.md                 ← this file
+├── .gitattributes            ← Git LFS for large data
 ├── .gitignore
 └── day-1/
     ├── README.md             ← Day 1 run order & concepts
     ├── _paths.py             ← shared data/output path helper
     ├── _shared/              ← toy inputs for examples (in code)
-    ├── data/                 ← raw tables (large CSVs local-only)
+    ├── data/                 ← full raw tables (large files via Git LFS)
     ├── output/               ← pipeline results (gitignored)
     ├── 01_sessionize/
     ├── 02_journey/
@@ -66,7 +68,16 @@ conda activate awsproject
 cd /path/to/CONSUMERANALYTICS
 ```
 
-### Full lab (needs local data under `day-1/data/`)
+### Clone / pull lab data (Git LFS)
+
+Large clickstreams live in `day-1/data/` via **Git LFS**. After clone (or if data files look like tiny pointer text):
+
+```bash
+git lfs install
+git lfs pull
+```
+
+### Full lab
 
 ```bash
 python day-1/01_sessionize/step01_sessionize.py
@@ -101,8 +112,8 @@ Details, inputs/outputs, and concepts: **[`day-1/README.md`](day-1/README.md)**.
 
 ## Data & git notes
 
-- **Tracked:** Day 1 scripts, guides, examples, small catalog/subscription samples, docs  
-- **Not tracked (local):** `day-1/output/`, oversized `web_events.csv` / `app_events.csv` / parquet extracts  
-- Place or regenerate large clickstream files under `day-1/data/` before running the full lab  
+- **Tracked:** Day 1 scripts, guides, examples, docs, and **full** `day-1/data/` (large CSVs/parquet via Git LFS)  
+- **Not tracked (local):** `day-1/output/`, `.github_token`  
+- After clone: `git lfs install && git lfs pull`  
 
 See [`day-1/data/README.md`](day-1/data/README.md) for table inventory.
