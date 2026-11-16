@@ -1,8 +1,12 @@
 # Learner guide — Sessionization (`step01_sessionize.py`)
 
-## Goal
+## Goal (in plain English)
 
-Turn raw web clickstream into **visits (sessions)** using a **30-minute inactivity** rule, then summarize each visit and attach a **7-day conversion** label.
+Raw clickstream is a long list of tiny actions (page view, scroll, checkout…).
+
+This step answers: **“Where does one visit end and the next begin?”**
+
+Rule: if the same cookie is idle for **more than 30 minutes**, start a **new session**. Then summarize each visit and ask: **did this cookie register/subscribe within 7 days?**
 
 ## How to run
 
@@ -17,141 +21,218 @@ python day-1/01_sessionize/step01_sessionize.py
 python day-1/01_sessionize/examples/01_sessionize_example.py
 ```
 
-See the paired `examples/` folder in this context directory.
+## Input / Output
 
-## Input
+| Input | Role |
+|-------|------|
+| `day-1/data/web_events.csv` | **Processed** — the clickstream |
+| `app_events.csv`, `content_catalog.csv`, `subscriptions.csv` | **Inventory only** (must exist) |
 
-| File | Used? |
-|------|--------|
-| `day-1/data/web_events.csv` | **Yes** — only table processed |
-| `day-1/data/app_events.csv` | Inventory only (must exist) |
-| `day-1/data/content_catalog.csv` | Inventory only |
-| `day-1/data/subscriptions.csv` | Inventory only |
+| Output | Grain |
+|--------|--------|
+| `day-1/output/sessionized_events.csv` | One row per event + session id |
+| `day-1/output/sessions.csv` | One row per visit |
 
-**Columns read from web events:**  
-`anonymous_id`, `timestamp`, `event_name`, `content_id`, `device_type`, `referrer`
-
-Ignore any generator `session_id` — rebuild sessions yourself.
-
-## Output
-
-| File | Grain |
-|------|--------|
-| `day-1/output/sessionized_events.csv` | Event + `session_id`, `stage`, `gap_seconds`, `is_conversion` |
-| `day-1/output/sessions.csv` | Session summary + `converted`, `already_converted` |
-
-## Cookie vs session
-
-- **Cookie** = long-lived visitor ID  
-- **Session** = one visit; ends after 30 min idle — **not** when the cookie expires  
+Ignore any generator `session_id` in the raw file — this script rebuilds sessions.
 
 ---
 
-## Deep code walkthrough
+## Big picture (intuition)
 
-### Paths and constants
+Think of a cookie’s timeline as a string of beads. Whenever the gap between beads is longer than 30 minutes, cut the string. Each piece is a **session (visit)**.
 
-```python
-DAY1 = Path(__file__).resolve().parents[1]   # day-1/
-DATA = DAY1 / "data"
-OUTPUT = DAY1 / "output"
+```text
+web_events.csv
+      │
+      ▼
+ collect_inventory()     ← are raw files present?
+      │
+      ▼
+ load_web_events()       ← clean, dedupe, map stage
+      │
+      ▼
+ sessionize()            ← cut at 30-min gaps
+      │
+      ├──► session_summary()           ← one row per visit
+      │              │
+      │              ▼
+      └──► attach_conversion_label()   ← 7-day convert flag
+                    │
+                    ▼
+           write CSVs + print stats
 ```
-
-| Constant | Value | Meaning |
-|----------|-------|---------|
-| `SESSION_GAP_SECONDS` | `1800` | Idle gap that starts a new visit |
-| `DUPLICATE_GAP_SECONDS` | `2` | Near-duplicate window |
-| `HORIZON_DAYS` | `7` | Conversion attribution window |
-| `CONVERSION_EVENTS` | register/subscribe activate | Outcomes, not browse depth |
-| `STAGE_BY_EVENT` | event → stage map | Funnel tags |
-| `STAGE_RANK` | landing=1 … deep=5 | Numeric depth for furthest stage |
-| `BEHAVIOR_EVENTS` | list of browse events | Counted in session summary |
-
-`STAGE_RANK` deliberately **excludes** registration/subscription — those are outcomes.
 
 ---
 
-### 1. `collect_inventory()`
+## High-level variables (what they mean)
 
-Confirms the four raw tables exist and returns row counts. Raises if any file is missing. This is the “event collection” checklist before processing.
+### Path / config constants
 
-### 2. `load_web_events()`
+| Name | What it is |
+|------|------------|
+| `DAY1` | Folder `day-1/` |
+| `DATA` / `OUTPUT` | `day-1/data/` and `day-1/output/` |
+| `WEB_EVENTS` … | Paths to raw tables |
+| `WEB_USECOLS` | Columns actually loaded from web events |
+| `SESSION_GAP_SECONDS` | `1800` (30 minutes) — gap that starts a new visit |
+| `DUPLICATE_GAP_SECONDS` | `2` — near-duplicate window |
+| `HORIZON_DAYS` | `7` — conversion look-ahead |
+| `CONVERSION_EVENTS` | `register_complete`, `subscription_active` |
+| `STAGE_BY_EVENT` | Maps each event name → funnel stage |
+| `STAGE_RANK` | Numeric depth: landing=1 … deep=5 |
+| `BEHAVIOR_EVENTS` | Event names counted on session summaries |
+| `KNOWN_EVENTS` | Allowed event names (anything else → error) |
 
-1. `_validate_web_header()` — required columns present  
-2. `read_csv` with only `WEB_USECOLS` (ignores generator `session_id`)  
-3. Parse timestamps; drop rows missing cookie/time/event  
-4. Reject **unknown** `event_name` values (forces taxonomy sync)  
-5. Sort cookie + time (`mergesort` = stable)  
-6. `_drop_near_duplicates`  
-7. Map `stage`, flag `is_conversion`  
+### Objects created while running
 
-**Why ignore raw `session_id`?** The generator’s sessions are not the lab’s 30-minute rule. Day 1 always rebuilds.
+| Name | What it is |
+|------|------------|
+| `inventory` | Row counts for the four raw tables |
+| `events` | Cleaned clickstream (later with `session_id`) |
+| `gap` | Seconds since previous event for the same cookie |
+| `new_session` | True when first event or gap > 30 min |
+| `session_idx` | Running integer id of the visit |
+| `sessions` / `summary` | One row per visit with counts and labels |
+| `converted` | True if first conversion falls within 7 days of this visit |
+| `already_converted` | True if cookie had converted *before* this visit |
 
-### 3. `_drop_near_duplicates(events)`
+### Important columns on outputs
 
-Marks a row as duplicate when **all** hold vs the previous row:
+| Column | Meaning |
+|--------|---------|
+| `anonymous_id` | Cookie / visitor key |
+| `session_id` | Visit id like `S000000001` |
+| `stage` | Funnel stage of this event |
+| `is_conversion` | Event is register/subscribe complete |
+| `gap_seconds` | Idle time before this event |
+| `furthest_stage` / `furthest_rank` | Deepest behavior stage in the visit |
+| `duration_sec` | Length of the behavior part of the visit |
+| `n_behavior_events` / `n_content` | Activity volume |
+| per-event count columns | How many page_views, scrolls, … in the visit |
 
-- same cookie  
-- same `event_name`  
-- same `content_id` (null → `""`)  
-- gap ≤ 2 seconds  
+---
 
-Keeps everything else. Removes tracker double-fires without deleting real revisits.
+## Deep code walkthrough (every function)
 
-### 4. `sessionize(events)`
+### `collect_inventory()`
+
+**Job:** Confirm the four raw tables exist and count rows.
+
+Uses `_row_count()` (lines in file minus header). Missing file → `FileNotFoundError`.
+
+**Returns:** `{ "web_events": N, "app_events": N, ... }`
+
+---
+
+### `_row_count(path)`
+
+**Job:** Fast line count for inventory. Missing path → `None`.
+
+---
+
+### `_validate_web_header()`
+
+**Job:** Read only the CSV header; check every `WEB_USECOLS` column exists before loading millions of rows.
+
+---
+
+### `load_web_events()`
+
+**Job:** Load and tidy the clickstream used for Day 1.
+
+**Steps:**
+
+1. Validate header.  
+2. Read only needed columns; parse timestamps.  
+3. Drop rows missing cookie / time / event.  
+4. Reject unknown `event_name` values.  
+5. Sort by cookie, then time.  
+6. Drop near-duplicates (`_drop_near_duplicates`).  
+7. Map `stage` from `STAGE_BY_EVENT`; flag `is_conversion`.
+
+**Returns:** Clean event DataFrame (not yet sessionized).
+
+---
+
+### `_drop_near_duplicates(events)`
+
+**Job:** Remove “double-click” noise.
+
+Keep a row unless it is the **same cookie + same event + same content** within **2 seconds** of the previous kept row.
+
+**Returns:** Deduped events.
+
+---
+
+### `sessionize(events, gap_seconds=SESSION_GAP_SECONDS)`
+
+**Job:** Cut the timeline into visits.
+
+**Steps:**
+
+1. Sort by cookie, time.  
+2. Compute `gap` = seconds since previous event **for that cookie**.  
+3. `new_session` = first event for cookie **or** gap > 30 minutes.  
+4. `session_idx` = running sum of `new_session` (global integer).  
+5. Build readable `session_id` = `S` + zero-padded index.
+
+**Returns:** Events with `session_idx`, `session_id`, `gap_seconds`.
+
+---
+
+### `session_summary(events)`
+
+**Job:** Collapse each visit into one scorecard.
+
+**Steps:**
+
+1. Split **behavior** events (exclude conversion events) for depth/duration.  
+2. Aggregate per `session_idx`: start/end, device, referrer, event counts.  
+3. Behavior stats: duration, unique content, furthest stage/rank.  
+4. Pivot per-event counts (`page_view`, `scroll`, …).  
+5. Fill missing behavior columns with 0.
+
+**Returns:** One row per session.
+
+---
+
+### `attach_conversion_label(sessions, events, horizon_days=7)`
+
+**Job:** Label each browsing visit with a future outcome.
+
+**Intuition:** For each cookie, look at conversion timestamps. For a session that starts **before** any conversion:
+
+- If the **first** conversion is within 7 days → `converted = True`.  
+- If a conversion already happened earlier → `already_converted = True` (not a “still anonymous” success case).
+
+Uses `searchsorted` so it stays fast on large data.
+
+**Returns:** Sessions with `converted` and `already_converted`.
+
+---
+
+### `main()`
+
+**Job:** Run the pipeline and print a human summary.
 
 ```text
-gap = seconds since this cookie's previous event
-new_session = gap is NaN  OR  gap > 1800
-session_idx = cumsum(new_session)
-session_id  = "S" + zero-padded index
+mkdir output
+inventory = collect_inventory()
+events    = sessionize(load_web_events())
+sessions  = attach_conversion_label(session_summary(events), events)
+write CSVs
+print event mix, furthest stage, 7-day convert rate among still-anonymous visits
 ```
-
-- First event for a cookie always starts a session (`NaN` gap).  
-- `gap_seconds` is stored for auditing.
-
-### 5. `session_summary(events)`
-
-One row per `session_idx`:
-
-| Field | How |
-|-------|-----|
-| start/end, device, referrer | from all events |
-| `n_behavior_events`, duration | **non-conversion** events only |
-| `furthest_rank` / `furthest_stage` | max `STAGE_RANK` on behavior |
-| per-event counts | `page_view`, `scroll`, … from `BEHAVIOR_EVENTS` |
-
-Duration = last behavior timestamp − first behavior timestamp (not conversion-only tails).
-
-### 6. `attach_conversion_label(sessions, events)`
-
-Per cookie:
-
-1. Collect sorted conversion timestamps.  
-2. For each session start, `searchsorted` finds the next conversion.  
-3. `already_converted` = a conversion already happened **before** this start.  
-4. `converted` = this session is still before the **first** conversion **and** `(first_conversion − start) ≤ 7 days`.
-
-Only the first converting opportunity is labeled; later sessions after conversion get `already_converted=True`.
-
-### 7. `main()` pipeline
-
-```text
-inventory → load_web_events → sessionize → session_summary
-         → attach_conversion_label → write CSVs + print stats
-```
-
-Prints event mix and furthest-stage distribution so you can sanity-check the taxonomy.
 
 ---
 
 ## Acceptance checks
 
-- Same cookie with a 40‑minute gap → **two** sessions  
-- Same cookie with a 10‑minute gap → **one** session  
-- Furthest stage uses max rank among **non-conversion** behavior events  
-- Downstream scripts can read both CSVs  
+- Every event has a `session_id`  
+- Gaps inside a session are ≤ 30 minutes (except the first event)  
+- `sessions.csv` has one row per `session_id`  
+- Conversion rate is only meaningful on visits that are not `already_converted`
 
 ## Teaching takeaway
 
-Raw clicks → visits with depth + conversion labels. Everything later (Journey, HMM, Features) starts here.
+Answer: *“What is one visit, and did it lead toward membership soon after?”*

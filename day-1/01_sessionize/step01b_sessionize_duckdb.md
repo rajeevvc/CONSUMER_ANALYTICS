@@ -1,8 +1,12 @@
 # Learner guide — DuckDB SQL sessionization (`step01b_sessionize_duckdb_sql.py`)
 
-## Goal
+## Goal (in plain English)
 
-Same **30-minute inactivity** sessionization as pandas `step01_sessionize.py`, but implemented in **SQL over Parquet** with DuckDB. Optional parallel path for SQL learners.
+Same idea as pandas step01: **cut a cookie’s timeline when idle > 30 minutes**.
+
+Difference: the heavy lifting is **SQL over Parquet** in DuckDB — useful if you think in windows/`LAG` instead of pandas.
+
+**Important:** Downstream Day‑1 scripts expect the **CSV** from `step01_sessionize.py`. This path is for practice / comparison.
 
 ## How to run
 
@@ -11,84 +15,109 @@ conda activate awsproject
 python day-1/01_sessionize/step01b_sessionize_duckdb_sql.py
 ```
 
-Requires: `duckdb`, and `day-1/data/web_events.parquet` (or generate parquet from CSV).
+Needs `duckdb`. Uses `web_events.parquet`, or builds it once from CSV.
 
 ## Input / Output
 
 | File | Role |
 |------|------|
-| `day-1/data/web_events.parquet` | Input (built from CSV if missing) |
-| `day-1/output/sessionized_events_sql.parquet` | Event + session ids |
+| `day-1/data/web_events.parquet` | Input (from CSV if missing) |
+| `day-1/output/sessionized_events_sql.parquet` | Events + session ids |
 | `day-1/output/sessions_sql.parquet` | Session summaries |
-
-## Note
-
-Downstream Day‑1 scripts expect the **CSV** outputs from `step01_sessionize.py`. Use this file to practice SQL sessionization.
 
 ---
 
-## Deep code walkthrough
+## Big picture (intuition)
 
-### Paths
+SQL CTEs mirror the pandas steps:
 
-Same pattern as step01: `DAY1 = parents[1]`, then `DATA` / `OUTPUT`. Constants `SESSION_GAP_SECONDS=1800` and `DUPLICATE_GAP_SECONDS=2` match pandas.
+```text
+raw → ordered (LAG) → deduped → with_gap → flagged (new_session)
+        → running SUM(new_session) = session_idx
+        → GROUP BY session_idx for summaries
+```
+
+---
+
+## High-level variables
+
+| Name | What it is |
+|------|------------|
+| `DAY1` / `DATA` / `OUTPUT` | Same folder layout as step01 |
+| `WEB_EVENTS_PARQUET` / `WEB_EVENTS_CSV` | Source paths |
+| `SESSION_GAP_SECONDS` | 1800 — new visit threshold |
+| `DUPLICATE_GAP_SECONDS` | 2 — near-duplicate window |
+| `SESSIONIZE_SQL` | Full SQL string that builds sessionized events |
+| `SESSIONS_SQL` | Aggregate one row per `session_idx` |
+| `con` | Open DuckDB connection |
+| `parquet_path` | Path actually queried |
+| `events_out` / `sessions_out` | Parquet write targets |
+
+SQL placeholders `?` are bound in order: parquet path, duplicate gap, session gap.
+
+---
+
+## Deep code walkthrough (every function + SQL stages)
 
 ### `ensure_web_events_parquet(con)`
 
-1. If `web_events.parquet` exists → use it.  
-2. Else if CSV exists → `COPY (SELECT * FROM read_csv_auto(...)) TO parquet`.  
+**Job:** Make sure Parquet exists for DuckDB to read fast.
+
+1. If parquet exists → return it.  
+2. Else if CSV exists → `COPY (... read_csv_auto ...) TO parquet` with ZSTD.  
 3. Else raise.
 
-This keeps SQL learners on columnar Parquet without requiring a separate ETL step.
-
-### `SESSIONIZE_SQL` — CTE pipeline
-
-Read the SQL top-to-bottom as stages:
-
-| CTE | What it does |
-|-----|----------------|
-| `raw` | Read parquet; cast timestamp; drop null cookie/time/event |
-| `ordered` | `lag()` over cookie×time for previous event/content |
-| `deduped` | Drop rows where same event+content and gap ≤ 2s |
-| `with_gap` | Recompute `gap_seconds` to previous **kept** event |
-| `flagged` | `new_session = 1` if first event or `gap_seconds > 1800` |
-
-Final `SELECT`:
-
-```sql
-session_idx = SUM(new_session) OVER (ORDER BY cookie, time ...)
-session_id  = 'S' || lpad(session_idx, 9, '0')
-```
-
-That running sum is the SQL equivalent of pandas `cumsum(new_session)`.
-
-**Window detail:** partitions are by `anonymous_id`; order is `timestamp, event_name` for deterministic ties.
-
-### `SESSIONS_SQL`
-
-Aggregates the temp table `sessionized_events`:
-
-- `MIN`/`MAX` timestamp → session span  
-- `arg_min(device_type, timestamp)` → device at first event  
-- counts of events / distinct content  
-
-This is a thinner summary than pandas (no furthest stage / conversion label). Teaching focus is the SQL session cut.
-
-### `main()`
-
-```text
-connect DuckDB
-  → ensure parquet
-  → CREATE TEMP TABLE sessionized_events AS <SESSIONIZE_SQL>
-  → CREATE TEMP TABLE sessions AS <SESSIONS_SQL>
-  → COPY both to output parquet
-  → print counts + the SQL text
-```
-
-Parameters bound into SQL: `[parquet_path, DUPLICATE_GAP_SECONDS, SESSION_GAP_SECONDS]` for the `?` placeholders.
+**Returns:** Path to parquet.
 
 ---
 
+### `SESSIONIZE_SQL` (CTE chain)
+
+| CTE | Plain meaning |
+|-----|----------------|
+| `raw` | Read parquet; keep non-null cookie/time/event |
+| `ordered` | Per cookie, `LAG` previous time/event/content |
+| `deduped` | Drop near-duplicates (same event+content within 2s) |
+| `with_gap` | Gap seconds to previous **kept** event |
+| `flagged` | `new_session = 1` if first event or gap > 30 min |
+| final `SELECT` | Running `SUM(new_session)` → `session_idx` / `session_id` |
+
+`session_id` is `'S' || lpad(session_idx, 9, '0')` — same style as pandas.
+
+---
+
+### `SESSIONS_SQL`
+
+**Job:** Collapse events to visits.
+
+Per `session_idx`: first/last timestamp, first device/referrer (`arg_min`), event count, distinct content.
+
+(Does **not** attach the 7-day conversion label — that stays on the pandas teaching path.)
+
+---
+
+### `main()`
+
+**Job:** Orchestrate DuckDB work.
+
+```text
+connect
+parquet = ensure_web_events_parquet(con)
+CREATE TEMP TABLE sessionized_events AS <SESSIONIZE_SQL>
+CREATE TEMP TABLE sessions AS <SESSIONS_SQL>
+COPY both tables to parquet outputs
+print counts + print the SQL used
+close connection
+```
+
+---
+
+## Acceptance checks
+
+- Event and session parquet files written  
+- Cookie/session counts in the same ballpark as pandas step01 on the same data  
+- Downstream labs still run from **CSV** step01 outputs  
+
 ## Teaching takeaway
 
-Same rule as pandas sessionize, expressed as window functions. Proof that “30-minute idle” is a data definition, not a library trick.
+Answer: *“Sessionization is a rule, not a library — SQL or pandas can express the same cut.”*

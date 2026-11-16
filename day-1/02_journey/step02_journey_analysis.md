@@ -1,20 +1,22 @@
 # Learner guide — Journey analysis (`step02_journey_analysis.py`)
 
-## Goal
+## Goal (in plain English)
 
-From sessionized events, build three complementary journey views:
+Sessions alone do not say **where journeys leak**. This step builds three complementary maps:
 
 | Method | Question | Unit |
 |--------|----------|------|
-| **Funnel** | How many sessions reach each stage? Advance rate? | Stage |
-| **Markov** | Given current stage, where next (or exit)? | Stage + `exit` |
+| **Funnel** | How many visits reach each stage? Do they advance? | Stage |
+| **Markov** | Given I’m here, where next — or exit? | Stage + `exit` |
 | **DFG** | What event→event paths actually happen? | Event name |
+
+Together they answer: **“Where should we focus to improve the path?”**
 
 ## How to run
 
 ```bash
 conda activate awsproject
-python day-1/01_sessionize/step01_sessionize.py          # if not already done
+python day-1/01_sessionize/step01_sessionize.py
 python day-1/02_journey/step02_journey_analysis.py
 ```
 
@@ -34,90 +36,170 @@ python day-1/02_journey/examples/03_dfg_example.py
 
 ---
 
-## Deep code walkthrough
+## Big picture (intuition)
 
-### Bootstrap
-
-```python
-DAY1 = Path(__file__).resolve().parents[1]
-OUTPUT = DAY1 / "output"
-sys.path.insert(0, str(DAY1 / "01_sessionize"))  # optional rebuild import
+```text
+sessionized_events.csv
+         │
+         ▼
+ load_sessionized_events()
+         │
+         ├── funnel_table()     → reach & advance rates
+         ├── fit_markov()       → P(next stage | current) + exit
+         └── fit_dfg()          → event process map, loops, top paths
 ```
 
-`VALID_END = 2026-03-01` — Markov/DFG train only on events **before** this date (hold out March as a test window). Funnel uses all loaded events.
-
-Taxonomy constants (`STAGE_BY_EVENT`, `FUNNEL_STAGES`, `MARKOV_STATES`) must stay in sync with step01.
+Funnel = **ladder**. Markov = **dice at each rung**. DFG = **street map of real clicks**.
 
 ---
+
+## High-level variables
+
+### Path / config constants
+
+| Name | What it is |
+|------|------------|
+| `DAY1` / `OUTPUT` | Lab folders |
+| `SESSIONIZED_EVENTS` | Path to step01 event CSV |
+| `VALID_END` | `2026-03-01` — Markov/DFG train only on earlier data |
+| `MAX_VARIANT_STEPS` | Cap path length when listing common journeys (6) |
+| `CONVERSION_EVENTS` / `STAGE_BY_EVENT` | Same taxonomy as step01 |
+| `FUNNEL_STAGES` | Ordered ladder including registration / subscription |
+| `MARKOV_STATES` | Funnel stages + artificial `exit` |
+| `INTERVENING_STAGES` | Stages used to pick “biggest exit” before outcomes |
+
+### Objects created while running
+
+| Name | What it is |
+|------|------------|
+| `events` | Sessionized clickstream with `stage` |
+| `funnel` | One row per stage with reach / advance |
+| `counts` / `probabilities` | Markov count matrix and row-normalized probs |
+| `transitions` / `dropoff` / `matrix` | Long form, exit rates, wide matrix |
+| `biggest` | Intervening stage with highest exit probability |
+| `dfg` | Dict of activities / edges / loops / journeys |
+| `pairs` | START / event→event / END follows |
+
+---
+
+## Deep code walkthrough (every function)
 
 ### `load_sessionized_events()`
 
-1. Prefer `sessionized_events.csv`.  
-2. If missing → `from step01_sessionize import load_web_events, sessionize` and rebuild.  
-3. Require `anonymous_id`, `timestamp`, `event_name`, `session_idx`.  
-4. Re-map `stage` and `is_conversion` (safe even if CSV already has them).
+**Job:** Get events with sessions.
+
+1. Read CSV, or rebuild via step01 `load_web_events` + `sessionize`.  
+2. Require cookie, time, event, `session_idx`.  
+3. Parse timestamps; map `stage`; flag conversions.
+
+**Returns:** Clean events DataFrame.
 
 ---
 
-### Funnel — `funnel_table(events)`
+### `funnel_table(events)`
+
+**Job:** Measure the ladder.
+
+**Steps:**
 
 1. Count events per stage.  
-2. Build session×stage **presence** matrix (`>0`).  
-3. Furthest stage = max ladder index per session.  
-4. For each stage *i*:
-   - `sessions_containing_stage`  
-   - `sessions_ending_here` (furthest == *i*)  
-   - `advance_rate` = share that also contain stage *i+1*  
+2. Per session, mark which stages appear (`contains`).  
+3. Find furthest stage index per session.  
+4. For each stage: sessions containing it, sessions whose furthest stage is here, sessions that also contain the **next** stage, **advance_rate**.
 
-**Advance is co-occurrence**, not “next click was next stage.” Cliffs show where journeys stall.
+**Returns:** Funnel DataFrame.
 
 ---
 
-### Markov — `fit_markov(events)`
+### `fit_markov(events)`
 
-Train subset: `timestamp < VALID_END`.
+**Job:** First-order stage transition model + exits.
 
-1. Encode stages as ints (`MARKOV_STATES` includes `exit`).  
-2. Count consecutive pairs **within the same session** via `np.add.at`.  
-3. For every session’s last event, add `stage → exit`.  
-4. Row-normalize → probabilities.  
-5. Build:
-   - long `transitions`  
-   - wide `matrix` (rows = funnel stages, cols = stages+exit)  
-   - `dropoff` with `exit_probability`  
-6. Pick `biggest` drop-off among intervening stages with enough mass (`≥1000` transitions).
+**Intuition:** Inside a session, each stage can move to another stage. The **last** stage of a session also gets an **exit** transition (left without going further in that visit).
 
-Helpers `_markov_long` / `_markov_dropoff` only reshape the count/probability arrays.
+**Steps:**
+
+1. Keep rows before `VALID_END`; sort within session.  
+2. Count consecutive stage→stage pairs **in the same session**.  
+3. Add stage→`exit` for every session’s last event.  
+4. Row-normalize to probabilities.  
+5. Build long table, dropoff table, wide matrix.  
+6. Among intervening stages with enough traffic, pick highest exit probability.
+
+**Returns:** `(transitions, dropoff, matrix, biggest)`.
 
 ---
 
-### DFG — `fit_dfg(events)`
+### `_markov_long(counts, probabilities)`
 
-Same pre-March window. Works on **`event_name`**, not stages.
+**Job:** Flatten the matrix to `from_stage`, `to_stage`, `count`, `probability` (skip empty cells; skip rows from `exit`).
 
-#### `_directly_follows`
+---
 
-Three edge families: `START→first`, consecutive pairs, `last→END`.
+### `_markov_dropoff(counts, probabilities)`
 
-#### `_edge_table`
+**Job:** Per funnel stage: how often the next “move” is **exit**.
 
-- `count`, `case_count` (unique sessions with that edge)  
-- `probability` = outbound share from `from_activity`  
-- Heuristic `dependency` (process-mining style forward vs reverse strength)  
-- Flags: self-loop / start / end  
+---
 
-#### `_activity_table`
+### `fit_dfg(events)`
 
-Per event name: event count, session count, how often it starts/ends a visit.
+**Job:** Build the event-level process map (before March).
 
-#### `_loops`
+Calls helpers and returns:
 
-- Self-loops from edges  
-- Return loops of form `A > B > A` inside a session (length-3 windows)
+```python
+{"activities", "edges", "loops", "journeys"}
+```
 
-#### `_variants`
+---
 
-Collapse consecutive repeats; take first `MAX_VARIANT_STEPS` (6) events; append `END`; return top 20 paths by frequency.
+### `_directly_follows(train)`
+
+**Job:** List every observed follow edge.
+
+- `START → first event` of each session  
+- `event → next event` inside the session  
+- `last event → END`
+
+**Returns:** Pair table with `session_idx`, `from_activity`, `to_activity`.
+
+---
+
+### `_edge_table(pairs)`
+
+**Job:** Aggregate edges with strength metrics.
+
+| Field | Meaning |
+|-------|---------|
+| `count` | How often this follow occurred |
+| `case_count` | How many sessions saw it at least once |
+| `probability` | Share of follows leaving `from_activity` |
+| `dependency` | Heuristic “directed strength” (self-loops handled separately) |
+| `is_self_loop` / `is_start` / `is_end` | Flags |
+
+---
+
+### `_activity_table(train, pairs)`
+
+**Job:** Per event name: how often it fires, in how many sessions, how often it starts/ends a visit (`start_share`, `end_share`).
+
+---
+
+### `_loops(train, edges)`
+
+**Job:** Find repetition patterns.
+
+1. **Self-loops** — same activity twice in a row (from edges).  
+2. **Return loops** — pattern `A → B → A` inside a session.
+
+Sorted by frequency.
+
+---
+
+### `_variants(train)`
+
+**Job:** List the most common **collapsed** paths (repeated same event in a row counts once), truncated to `MAX_VARIANT_STEPS`, top 20 journeys with share of sessions.
 
 ---
 
@@ -125,20 +207,19 @@ Collapse consecutive repeats; take first `MAX_VARIANT_STEPS` (6) events; append 
 
 ```text
 load events
-  → funnel_table → funnel.csv
-  → fit_markov → markov_*.csv
-  → fit_dfg → dfg_*.csv
-  → print funnel, matrix, top DFG edges
+funnel → funnel.csv
+Markov → transitions / matrix / dropoff CSVs; print biggest exit
+DFG → activities / edges / loops / journeys CSVs; print top follows
 ```
 
 ---
 
 ## Acceptance checks
 
-- Funnel / Markov use **stages**; DFG uses **event names**  
-- Intent → deep advance much lower than earlier steps (cliff)  
-- Markov matrix rows roughly sum to 1  
+- Funnel stages follow the defined order  
+- Markov rows (non-exit) roughly sum to 1 across destinations  
+- DFG edges include START/END markers  
 
 ## Teaching takeaway
 
-Funnel = reach; Markov = next-step odds; DFG = fine-grained click map.
+Answer: *“Where do journeys stall, exit, or loop — and what real click paths dominate?”*
