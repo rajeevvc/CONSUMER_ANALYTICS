@@ -48,7 +48,19 @@ Source: `_shared/data/toy_sessions.csv`.
 
 ### OUTPUT (PROCESSED)
 
-One row per cookie:
+One row per **cookie** (habit vector):
+
+| Column | Meaning |
+|--------|---------|
+| `anonymous_id` | Cookie key |
+| `n_sessions` | How many visits this cookie had |
+| `mean_duration_sec` | Average visit length (seconds) |
+| `mean_furthest_rank` | Average depth (1=landing … 5=deep) |
+| `share_intent` | Share of visits whose furthest stage was intent |
+| `share_deep` | Share of visits that reached deep |
+| `subscription_view_rate` | Share of behavior events that are plan views |
+| `conversion_rate` | Share of visits that include a conversion |
+| `recency_days` | Days since this cookie’s last visit (vs latest in the toy) |
 
 ```text
 anonymous_id  n_sessions  mean_duration_sec  mean_furthest_rank  share_intent  share_deep  subscription_view_rate  conversion_rate  recency_days

@@ -39,7 +39,14 @@ The example prints the **stage sequence** per session (conversions kept as stage
 
 ### OUTPUT (PROCESSED)
 
-Transition matrix — each row ≈ P(next | current), including exit:
+**Transition matrix** — rows = current stage, columns = next stage (including artificial `exit`):
+
+| Piece | Meaning |
+|-------|---------|
+| Row label | Current stage (`landing`, `scroll`, …) |
+| Column label | Next stage, or `exit` if the visit ended there |
+| Cell value | Probability P(next \| current); each row sums ≈ 1 |
+| `exit` column | Chance the visit stops after this stage |
 
 ```text
               landing  scroll  engaged  intent   deep  registration  subscription   exit

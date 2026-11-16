@@ -39,7 +39,16 @@ The example prints the **event-name path** per session:
 
 ### OUTPUT (PROCESSED)
 
-Aggregated DFG edges (count + probability leaving `from_activity`):
+One row per **observed follow** (edge):
+
+| Column | Meaning |
+|--------|---------|
+| `from_activity` | Source event (`START`, `page_view`, …) |
+| `to_activity` | Destination event (`scroll`, `END`, …) |
+| `count` | How many times this follow was seen |
+| `probability` | Share of follows leaving `from_activity` that go here |
+
+`START` / `END` are artificial markers for visit begin/end.
 
 ```text
       from_activity         to_activity  count  probability

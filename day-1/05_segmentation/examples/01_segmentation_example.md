@@ -50,6 +50,15 @@ anonymous_id         persona  mean_furthest_rank  conversion_rate  share_deep
 
 ### OUTPUT (PROCESSED)
 
+One row per **cookie** with assigned audience names:
+
+| Column | Meaning |
+|--------|---------|
+| `anonymous_id` | Cookie id |
+| `persona` | Planted truth (check only — not from the model) |
+| `kmeans_label` | Hard cluster name from K-Means (`bouncers`, …) |
+| `gmm_label` | Soft-mixture assignment (argmax component) from GMM |
+
 ```text
 anonymous_id         persona    kmeans_label       gmm_label
           B1   bouncer_truth        bouncers        bouncers

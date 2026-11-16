@@ -48,6 +48,17 @@ Source: `_shared/data/toy_sessions.csv`.
 
 ### OUTPUT (PROCESSED)
 
+One row per **funnel stage**:
+
+| Column | Meaning |
+|--------|---------|
+| `stage` | Funnel rung (`landing`…`subscription`) |
+| `events` | How many events tagged with this stage |
+| `sessions_containing_stage` | Visits that ever hit this stage |
+| `sessions_ending_here` | Visits whose furthest stage is this one |
+| `next_stage` | The next rung on the ladder (blank at the end) |
+| `advance_rate` | Share of visits that hit this stage **and** the next (ever) |
+
 ```text
        stage  events  sessions_containing_stage  sessions_ending_here   next_stage  advance_rate
      landing       4                          4                     1       scroll        0.7500

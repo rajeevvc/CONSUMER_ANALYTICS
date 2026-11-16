@@ -49,6 +49,14 @@ Conversion events (`subscription_active`, `register_complete`) are dropped befor
 
 ### OUTPUT (PROCESSED)
 
+One row per **browse event** (same grain as input, plus the decoded mode):
+
+| Column | Meaning |
+|--------|---------|
+| `session_idx` | Visit id |
+| `event_name` | Original browse action |
+| `hmm_mode` | Most likely latent mode (`skimming_like` or `exploring_like`) |
+
 ```text
  session_idx        event_name       hmm_mode
            1         page_view  skimming_like

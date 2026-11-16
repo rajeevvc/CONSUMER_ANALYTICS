@@ -54,6 +54,18 @@ anonymous_id           timestamp          event_name content_id device_type     
 
 ### OUTPUT (PROCESSED)
 
+One row per **visit** (session):
+
+| Column | Meaning |
+|--------|---------|
+| `session_id` | Visit id created by the 30‑min rule (`S000000001`, …) |
+| `anonymous_id` | Cookie that owns this visit |
+| `session_start` | First event time in the visit |
+| `duration_sec` | Length of the behavior part of the visit (seconds) |
+| `n_behavior_events` | How many non-conversion events in the visit |
+| `furthest_stage` | Deepest funnel stage reached (`landing`…`deep`) |
+| `converted` | True if first register/subscribe is within 7 days of this visit |
+
 ```text
 session_id anonymous_id       session_start  duration_sec  n_behavior_events furthest_stage  converted
 S000000001        A0001 2026-01-10 10:00:00         300.0                  2         scroll      False
