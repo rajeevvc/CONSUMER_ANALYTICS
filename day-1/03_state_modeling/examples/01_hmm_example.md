@@ -9,7 +9,6 @@ Toy twin of `step03_behavioral_state_modeling.py` (lab uses 4 modes; this demo u
 ## How to run
 
 ```bash
-conda activate awsproject
 python day-1/03_state_modeling/examples/01_hmm_example.py
 ```
 

@@ -11,7 +11,6 @@ Difference: the heavy lifting is **SQL over Parquet** in DuckDB — useful if yo
 ## How to run
 
 ```bash
-conda activate awsproject
 python day-1/01_sessionize/step01b_sessionize_duckdb_sql.py
 ```
 

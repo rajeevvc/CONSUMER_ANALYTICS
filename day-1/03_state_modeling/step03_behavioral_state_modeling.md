@@ -11,7 +11,6 @@ Duration in a mode is **geometric** (chance of staying each step) — the usual 
 ## How to run
 
 ```bash
-conda activate awsproject
 python day-1/01_sessionize/step01_sessionize.py
 python day-1/03_state_modeling/step03_behavioral_state_modeling.py
 ```

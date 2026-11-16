@@ -64,7 +64,6 @@ Shared toy loaders for examples: [`day-1/_shared/`](day-1/_shared/).
 ## Quick start
 
 ```bash
-conda activate awsproject
 cd /path/to/CONSUMERANALYTICS
 ```
 

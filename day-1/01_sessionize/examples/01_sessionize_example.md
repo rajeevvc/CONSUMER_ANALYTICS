@@ -9,7 +9,6 @@ Toy-sized twin of `step01_sessionize.py` — small enough to check by hand.
 ## How to run
 
 ```bash
-conda activate awsproject
 python day-1/01_sessionize/examples/01_sessionize_example.py
 ```
 

@@ -15,7 +15,6 @@ Together they answer: **“Where should we focus to improve the path?”**
 ## How to run
 
 ```bash
-conda activate awsproject
 python day-1/01_sessionize/step01_sessionize.py
 python day-1/02_journey/step02_journey_analysis.py
 ```

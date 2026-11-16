@@ -18,7 +18,6 @@ Marketing can then say “this person looks like a *bouncer*” vs “*converter
 ## How to run
 
 ```bash
-conda activate awsproject
 python day-1/04_feature_engineering/step04_feature_engineering.py
 python day-1/05_segmentation/step05_behavioral_segmentation.py
 ```

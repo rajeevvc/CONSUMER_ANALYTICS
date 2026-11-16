@@ -11,7 +11,6 @@ Rule: if the same cookie is idle for **more than 30 minutes**, start a **new ses
 ## How to run
 
 ```bash
-conda activate awsproject
 python day-1/01_sessionize/step01_sessionize.py
 ```
 

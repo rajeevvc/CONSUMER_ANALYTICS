@@ -9,7 +9,6 @@ Toy twin of step02’s DFG helpers.
 ## How to run
 
 ```bash
-conda activate awsproject
 python day-1/02_journey/examples/03_dfg_example.py
 ```
 

@@ -14,7 +14,6 @@ This step builds:
 ## How to run
 
 ```bash
-conda activate awsproject
 python day-1/01_sessionize/step01_sessionize.py
 python day-1/03_state_modeling/step03_behavioral_state_modeling.py   # optional — hmm_share_*
 python day-1/04_feature_engineering/step04_feature_engineering.py

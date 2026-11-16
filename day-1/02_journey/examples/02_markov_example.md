@@ -9,7 +9,6 @@ Toy twin of `step02_journey_analysis.fit_markov`.
 ## How to run
 
 ```bash
-conda activate awsproject
 python day-1/02_journey/examples/02_markov_example.py
 ```
 

@@ -34,7 +34,7 @@ SESSIONIZED_EVENTS = OUTPUT / "sessionized_events.csv"
 if str(DAY1 / "01_sessionize") not in sys.path:
     sys.path.insert(0, str(DAY1 / "01_sessionize"))
 
-# Bundled hmmlearn from the labs package (conda env may not have it).
+# Bundled hmmlearn from the labs package (if not installed in the active env).
 VENDOR = ROOT / "marketing-behavioral-labs" / "day1" / ".vendor"
 if VENDOR.exists() and str(VENDOR) not in sys.path:
     sys.path.insert(0, str(VENDOR))

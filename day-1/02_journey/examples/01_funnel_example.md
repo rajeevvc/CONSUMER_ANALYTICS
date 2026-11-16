@@ -9,7 +9,6 @@ Toy twin of `step02_journey_analysis.funnel_table`.
 ## How to run
 
 ```bash
-conda activate awsproject
 python day-1/02_journey/examples/01_funnel_example.py
 ```
 

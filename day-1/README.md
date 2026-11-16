@@ -5,7 +5,6 @@ Lean learner guides for each implementation. Work **in order**.
 ## Environment
 
 ```bash
-conda activate awsproject
 cd /path/to/CONSUMERANALYTICS
 ```
 

@@ -9,7 +9,6 @@ Toy twin of step01 summary + `step04_feature_engineering.user_features`.
 ## How to run
 
 ```bash
-conda activate awsproject
 python day-1/04_feature_engineering/examples/01_feature_engineering_example.py
 ```
 

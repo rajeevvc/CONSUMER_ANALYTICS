@@ -29,7 +29,6 @@ day-1/_shared/
 ## Regenerate
 
 ```bash
-conda activate awsproject
 python day-1/_shared/generate_toy_data.py
 ```
 

@@ -9,7 +9,6 @@ Toy twin of `step05_behavioral_segmentation.py` — three planted groups (bounce
 ## How to run
 
 ```bash
-conda activate awsproject
 python day-1/05_segmentation/examples/01_segmentation_example.py
 ```
 
