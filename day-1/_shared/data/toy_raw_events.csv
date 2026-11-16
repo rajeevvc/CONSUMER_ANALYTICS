@@ -1,0 +1,20 @@
+anonymous_id,timestamp,event_name,content_id,device_type,referrer
+A0001,2026-01-10 10:00:00,page_view,C001,desktop,organic_search
+A0001,2026-01-10 10:00:01,page_view,C001,desktop,organic_search
+A0001,2026-01-10 10:05:00,scroll,C001,desktop,
+A0001,2026-01-10 10:40:00,page_view,C002,desktop,direct
+A0002,2026-01-10 11:00:00,page_view,C010,mobile,social_organic
+A0002,2026-01-10 11:00:30,scroll,C010,mobile,
+A0002,2026-01-10 11:01:00,engaged_read,C010,mobile,
+A0003,2026-01-10 12:00:00,page_view,C020,tablet,email
+A0003,2026-01-10 12:00:20,scroll,C020,tablet,
+A0003,2026-01-10 12:01:00,engaged_read,C020,tablet,
+A0003,2026-01-10 12:02:00,subscription_view,C020,tablet,
+A0003,2026-01-10 12:02:30,subscribe_click,C020,tablet,
+A0004,2026-01-10 13:00:00,page_view,C030,desktop,organic_search
+A0004,2026-01-10 13:00:15,scroll,C030,desktop,
+A0004,2026-01-10 13:01:00,engaged_read,C030,desktop,
+A0004,2026-01-10 13:02:00,subscription_view,C030,desktop,
+A0004,2026-01-10 13:03:00,checkout_start,C030,desktop,
+A0004,2026-01-10 13:04:00,payment_success,C030,desktop,
+A0004,2026-01-10 13:05:00,subscription_active,,desktop,

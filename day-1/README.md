@@ -72,7 +72,7 @@ python day-1/04_feature_engineering/examples/01_feature_engineering_example.py
 python day-1/05_segmentation/examples/01_segmentation_example.py
 ```
 
-Toy inputs live in [`_shared/`](_shared/). Examples do **not** need `data/web_events.csv`.
+Toy inputs live in [`_shared/data/`](_shared/data/) (CSVs). Regenerate with `python day-1/_shared/generate_toy_data.py`. Examples do **not** need `day-1/data/web_events.csv`.
 
 ## Concepts to keep straight
 

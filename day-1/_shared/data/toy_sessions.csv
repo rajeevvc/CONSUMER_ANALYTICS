@@ -1,0 +1,17 @@
+session_idx,timestamp,event_name,anonymous_id,stage
+1,2026-01-10 10:00:00,page_view,A0001,landing
+2,2026-01-10 11:00:00,page_view,A0002,landing
+2,2026-01-10 11:00:30,scroll,A0002,scroll
+2,2026-01-10 11:01:00,engaged_read,A0002,engaged
+3,2026-01-10 12:00:00,page_view,A0003,landing
+3,2026-01-10 12:00:20,scroll,A0003,scroll
+3,2026-01-10 12:01:00,engaged_read,A0003,engaged
+3,2026-01-10 12:02:00,subscription_view,A0003,intent
+3,2026-01-10 12:02:30,subscribe_click,A0003,intent
+4,2026-01-10 13:00:00,page_view,A0004,landing
+4,2026-01-10 13:00:15,scroll,A0004,scroll
+4,2026-01-10 13:01:00,engaged_read,A0004,engaged
+4,2026-01-10 13:02:00,subscription_view,A0004,intent
+4,2026-01-10 13:03:00,checkout_start,A0004,deep
+4,2026-01-10 13:04:00,payment_success,A0004,deep
+4,2026-01-10 13:05:00,subscription_active,A0004,subscription

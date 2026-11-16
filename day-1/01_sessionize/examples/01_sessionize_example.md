@@ -17,7 +17,7 @@ python day-1/01_sessionize/examples/01_sessionize_example.py
 
 | Section | What you see |
 |---------|----------------|
-| **RAW** | Click rows from `_shared/toy_raw_events.py` |
+| **RAW** | Click rows from `_shared/data/toy_raw_events.csv` |
 | **PROCESSED** | One scorecard row per visit |
 
 Designed quirks: A0001 has a 1s duplicate (drop) and a 35‑min gap (new session); A0004 converts.

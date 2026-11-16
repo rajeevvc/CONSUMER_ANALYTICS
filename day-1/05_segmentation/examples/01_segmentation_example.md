@@ -25,7 +25,7 @@ python day-1/05_segmentation/examples/01_segmentation_example.py
 ## Big picture (intuition)
 
 ```text
-toy_audience()          4 bouncers + 4 readers + 4 converters
+toy_audience()          loads _shared/data/toy_audience.csv
       │
       ▼
  fit_segmentation()     scale → choose k → K-Means + GMM → name

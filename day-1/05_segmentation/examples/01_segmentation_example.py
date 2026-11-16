@@ -8,12 +8,22 @@ Run:
 
 from __future__ import annotations
 
+from pathlib import Path
+import sys
+
 import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.mixture import GaussianMixture
 from sklearn.preprocessing import StandardScaler
+
+_DAY1 = Path(__file__).resolve().parents[2]
+_SHARED = _DAY1 / "_shared"
+if str(_SHARED) not in sys.path:
+    sys.path.insert(0, str(_SHARED))
+
+TOY_AUDIENCE_CSV = _SHARED / "data" / "toy_audience.csv"
 
 FEATURE_COLUMNS = [
     "n_sessions",
@@ -27,54 +37,12 @@ FEATURE_COLUMNS = [
 
 
 def toy_audience() -> pd.DataFrame:
-    """12 cookies in 3 obvious groups (clearer than 4 single-session toys)."""
-    rows = []
-    # Bouncers — shallow, short, no convert
-    for i in range(4):
-        rows.append(
-            {
-                "anonymous_id": f"B{i+1}",
-                "persona": "bouncer_truth",
-                "n_sessions": 1,
-                "mean_duration_sec": 20 + i * 5,
-                "mean_furthest_rank": 1.0,
-                "share_intent": 0.0,
-                "share_deep": 0.0,
-                "subscription_view_rate": 0.0,
-                "conversion_rate": 0.0,
-            }
+    """12 cookies in 3 obvious groups from day-1/_shared/data/toy_audience.csv."""
+    if not TOY_AUDIENCE_CSV.exists():
+        raise FileNotFoundError(
+            f"missing {TOY_AUDIENCE_CSV}. Run: python day-1/_shared/generate_toy_data.py"
         )
-    # Regular readers — mid depth, some intent
-    for i in range(4):
-        rows.append(
-            {
-                "anonymous_id": f"R{i+1}",
-                "persona": "reader_truth",
-                "n_sessions": 2 + i,
-                "mean_duration_sec": 180 + i * 20,
-                "mean_furthest_rank": 3.0 + 0.2 * i,
-                "share_intent": 0.1,
-                "share_deep": 0.0,
-                "subscription_view_rate": 0.05,
-                "conversion_rate": 0.0,
-            }
-        )
-    # Converters — deep + intent + convert
-    for i in range(4):
-        rows.append(
-            {
-                "anonymous_id": f"C{i+1}",
-                "persona": "converter_truth",
-                "n_sessions": 3 + i,
-                "mean_duration_sec": 400 + i * 30,
-                "mean_furthest_rank": 4.5 + 0.1 * i,
-                "share_intent": 0.4,
-                "share_deep": 0.3,
-                "subscription_view_rate": 0.25,
-                "conversion_rate": 0.4 + 0.1 * i,
-            }
-        )
-    return pd.DataFrame(rows)
+    return pd.read_csv(TOY_AUDIENCE_CSV)
 
 
 def name_segment(part: pd.DataFrame) -> str:
