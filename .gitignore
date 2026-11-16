@@ -6,6 +6,9 @@ __pycache__/
 *.pyc
 .venv/
 
+# Local GitHub PAT for rajeevvc pushes — never commit
+.github_token
+
 # Regenerated pipeline artifacts (too large for GitHub)
 day-1/output/
 

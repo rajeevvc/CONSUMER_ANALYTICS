@@ -1,175 +1,87 @@
-# `01_segmentation_example.py` — deep code walkthrough
+# Example guide — Segmentation (`01_segmentation_example.py`)
 
-**Question:** Which audience group does each cookie belong to?
+## Goal (in plain English)
 
-**Maps to lab:** `day-1/05_segmentation/step05_behavioral_segmentation.py`
+Cluster **12 toy cookies** into named audiences with **K-Means** and **GMM**.
 
-**Run:**
+Toy twin of `step05_behavioral_segmentation.py` — three planted groups (bouncers / readers / converters) so you can see recovery by eye.
+
+## How to run
 
 ```bash
 conda activate awsproject
 python day-1/05_segmentation/examples/01_segmentation_example.py
 ```
 
----
+## Input / Output (terminal)
 
-## Why this exists
-
-After feature engineering, each cookie is a numeric vector. **Segmentation** groups similar vectors into audiences:
-
-- **K-Means** — hard assignment to nearest centroid  
-- **GMM** — soft mixture of Gaussians; we take `argmax` for a hard label  
-
-This toy builds a **synthetic 12-cookie audience** (clearer than the 4 single-session journey toys) with three planted personas.
+| Section | What you see |
+|---------|----------------|
+| **RAW** | Hand-built user features + truth `persona` |
+| **PROCESSED** | `kmeans_label` and `gmm_label` per cookie |
 
 ---
 
-## Feature columns used for fitting
+## Big picture (intuition)
 
-```python
-FEATURE_COLUMNS = [
-    "n_sessions",
-    "mean_duration_sec",
-    "mean_furthest_rank",
-    "share_intent",
-    "share_deep",
-    "subscription_view_rate",
-    "conversion_rate",
-]
+```text
+toy_audience()          4 bouncers + 4 readers + 4 converters
+      │
+      ▼
+ fit_segmentation()     scale → choose k → K-Means + GMM → name
+      │
+      ▼
+ print RAW / PROCESSED  (profile() helper available for scorecards)
 ```
 
-`persona` is **ground truth for teaching only** — it is never passed into the scaler / clusterers.
-
 ---
 
-## Function 1: `toy_audience()`
+## High-level variables
 
-Creates 12 rows:
-
-| Group | IDs | Design |
-|-------|-----|--------|
-| Bouncers | B1–B4 | shallow depth 1.0, short duration, no convert |
-| Readers | R1–R4 | mid depth ~3+, longer duration, no convert |
-| Converters | C1–C4 | deep depth ~4.5+, high intent/deep rates, convert |
-
-Slight within-group noise (duration/depth increments) so clustering isn’t trivial equality.
-
----
-
-## Function 2: `name_segment(part)`
-
-After clustering, numeric ids are renamed from **profile means**:
-
-```
-if mean conversion_rate ≥ 0.2 → "converters"
-else if mean furthest_rank ≥ 2.5 → "regular_readers"
-else → "bouncers"
-```
-
-Threshold `2.5` is intentional: mid-depth readers sit above it; pure landing bouncers sit below.
-
----
-
-## Function 3: `fit_segmentation(users)` — full pipeline
-
-### 1) Scale
-
-```python
-scaled = StandardScaler().fit_transform(matrix)
-```
-
-Seconds and rates live on different scales; without scaling, duration would dominate distance.
-
-### 2) Choose `k` with silhouette
-
-Try `k = 2, 3, 4` with K-Means (`n_init=10`, `random_state=42`). Pick the `k` with highest silhouette score.
-
-On this designed toy, **`k = 3`** wins.
-
-### 3) Fit both models at `best_k`
-
-- `KMeans` → `kmeans_segment` (0…k-1)
-- `GaussianMixture(covariance_type="full", n_init=3)` → `gmm_segment`
-
-### 4) Name segments
-
-Map each numeric segment through `name_segment`. `unique_map` appends `_2`, `_3`, … if two clusters would get the same name (safety).
-
-### 5) Store diagnostics on `DataFrame.attrs`
-
-| Attr | Meaning |
+| Name | Meaning |
 |------|---------|
-| `k` | Chosen cluster count |
-| `silhouette_scores` | List of `(k, score)` tuples |
-| `gmm_bic` | GMM BIC on scaled data (lower often better when comparing GMMs) |
+| `FEATURE_COLUMNS` | Numeric axes used for clustering |
+| `persona` | Planted truth label (not fed to the model) |
+| `matrix` / `scaled` | Raw vs standardized feature matrix |
+| `best_k` | k with best silhouette (designed to be 3) |
+| `kmeans_segment` / `gmm_segment` | Integer cluster ids |
+| `kmeans_label` / `gmm_label` | Friendly names |
+| `scores` | List of `(k, silhouette)` trials |
 
 ---
 
-## Function 4: `profile(frame, segment_col, label_col)`
+## Deep code walkthrough (every function)
 
-One summary row per segment: size, mean depth, mean conversion, mean `share_deep`. Used to read “what is this audience like?”
+### `toy_audience()`
+
+**Job:** Build 12 cookies in 3 obvious groups with different depth/conversion patterns.
+
+### `name_segment(part)`
+
+**Job:** Heuristic name from group averages — converters if conversion high, else regular_readers if depth mid/high, else bouncers.
+
+### `fit_segmentation(users)`
+
+**Job:**
+
+1. Scale `FEATURE_COLUMNS`.  
+2. Try k = 2…4; pick max silhouette.  
+3. Fit K-Means and GMM at that k.  
+4. Map ids → names (`unique_map` avoids duplicate labels).  
+5. Store `k`, silhouette trials, GMM BIC on `out.attrs`.
+
+**Returns:** Labeled audience DataFrame.
+
+### `profile(frame, segment_col, label_col)`
+
+**Job:** Small scorecard per segment (size, depth, conversion, deep share). Available for inspection; main prints assignments.
+
+### `_section(title)` / `main()`
+
+Print RAW features; fit; print PROCESSED labels vs planted personas.
 
 ---
 
-## What `main()` prints
+## Teaching takeaway
 
-| Block | Content |
-|-------|---------|
-| **RAW** | Toy audience feature table |
-| **PROCESSED** | Segment assignment per cookie |
-
----
-
-## K-Means vs GMM (teaching contrast)
-
-| | K-Means | GMM |
-|-|---------|-----|
-| Assignment | Hard nearest centroid | Soft responsibilities → argmax |
-| Shape assumption | Spherical-ish clusters in scaled space | Full covariance ellipses (`full`) |
-| Extra metric here | Silhouette for k | BIC stored for model quality |
-
-On this clean toy they usually recover the same three groups.
-
----
-
-## Lab connection
-
-`step05` runs the same scale → choose k → K-Means + GMM flow on **real user features** from `step04` (often more columns). Naming rules may be richer; HDBSCAN was removed from the teaching path.
-
-## Sample terminal output (what you see when you run it)
-
-### RAW — toy audience features
-
-```text
-anonymous_id         persona  mean_furthest_rank  conversion_rate  share_deep
-          B1   bouncer_truth                 1.0              0.0         0.0
-          …
-          R1    reader_truth                 3.0              0.0         0.0
-          …
-          C1 converter_truth                 4.5              0.4         0.3
-```
-
-**How to read it:** 12 cookies with planted personas (not used for fitting).
-
-### PROCESSED — segment assignments
-
-```text
-anonymous_id         persona    kmeans_label       gmm_label
-          B1   bouncer_truth        bouncers        bouncers
-          …
-          R1    reader_truth regular_readers regular_readers
-          …
-          C1 converter_truth      converters      converters
-
-Note: chosen k=3; toy recovers bouncers / regular_readers / converters.
-```
-
-**How to read it:** Each cookie gets a named segment. K-Means and GMM agree with the designed personas.
-
-## Pipeline position
-
-```
-sessionize → journey / HMM → features → segmentation (this file)
-```
-
-You need features first. HMM modes are optional extras in the full lab, not required by this toy.
+Answer: *“Which audience is this cookie?”* — K-Means (hard) and GMM (soft→argmax) should both recover the three planted groups on this toy.
