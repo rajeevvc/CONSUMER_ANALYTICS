@@ -1,12 +1,23 @@
 # Day 1 data
 
-Small catalog tables may be in this folder. Large clickstream extracts are **not** in git (GitHub 100MB file limit):
+Full lab tables for sessionization and inventory checks live in this folder.
 
-- `web_events.csv` (~156MB)
-- `app_events.csv` (~33MB, also omitted for size)
-- `*.parquet`
+| File | Role | How stored |
+|------|------|------------|
+| `web_events.csv` | Main clickstream (sessionize) | Git LFS (~156MB) |
+| `web_events.parquet` | Same for DuckDB path | Git LFS |
+| `app_events.csv` / `.parquet` | Inventory / app events | Git LFS |
+| `content_catalog.csv` / `.parquet` | Content metadata | Git (CSV) / LFS (parquet) |
+| `subscriptions.csv` / `.parquet` | Subscription records | Git (CSV) / LFS (parquet) |
 
-Copy them from your lab data pack / generator into this folder before running:
+After clone, pull LFS objects:
+
+```bash
+git lfs install
+git lfs pull
+```
+
+Then run:
 
 ```bash
 python day-1/01_sessionize/step01_sessionize.py

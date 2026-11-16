@@ -9,10 +9,7 @@ __pycache__/
 # Local GitHub PAT for rajeevvc pushes — never commit
 .github_token
 
-# Regenerated pipeline artifacts (too large for GitHub)
+# Regenerated pipeline artifacts (too large / local-only)
 day-1/output/
 
-# Oversized raw extracts (>100MB GitHub limit; regenerate / copy locally)
-day-1/data/web_events.csv
-day-1/data/app_events.csv
-day-1/data/*.parquet
+# Large day-1/data extracts are stored via Git LFS (see .gitattributes)
