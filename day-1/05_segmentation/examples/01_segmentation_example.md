@@ -18,6 +18,20 @@ Source: `_shared/data/toy_audience.csv`.
 
 ### INPUT (RAW)
 
+Printed preview columns (full CSV also has `n_sessions`, `mean_duration_sec`, `share_intent`, `subscription_view_rate`):
+
+| Column | Meaning |
+|--------|---------|
+| `anonymous_id` | Cookie id (`B*`, `R*`, `C*`) |
+| `persona` | Planted truth label — **not** used by clustering |
+| `mean_furthest_rank` | Typical visit depth (1=landing … 5=deep) |
+| `conversion_rate` | Share of visits that convert |
+| `share_deep` | Share of visits that reached deep |
+| `n_sessions` | How often they visit *(in CSV; used for clustering)* |
+| `mean_duration_sec` | Typical visit length *(in CSV; used for clustering)* |
+| `share_intent` | Share of intent-depth visits *(in CSV)* |
+| `subscription_view_rate` | How often they see plan pages *(in CSV)* |
+
 ```text
 anonymous_id         persona  mean_furthest_rank  conversion_rate  share_deep
           B1   bouncer_truth                 1.0              0.0         0.0

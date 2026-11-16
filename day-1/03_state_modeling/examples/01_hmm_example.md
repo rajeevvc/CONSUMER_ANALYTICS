@@ -20,6 +20,14 @@ Source: `_shared/data/toy_sessions.csv` (conversion outcomes dropped before fit/
 
 ### INPUT (RAW)
 
+| Column | Meaning |
+|--------|---------|
+| `session_idx` | Visit id (HMM sequences are per session) |
+| `event_name` | Browse action coded as an observation (`obs`) |
+| `stage` | Funnel tag (for reading only; HMM learns from `event_name`) |
+
+Conversion events (`subscription_active`, `register_complete`) are dropped before fit/decode.
+
 ```text
  session_idx        event_name   stage
            1         page_view landing

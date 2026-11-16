@@ -18,6 +18,17 @@ Source: `_shared/data/toy_raw_events.csv`. Designed quirks: A0001 has a 1s dupli
 
 ### INPUT (RAW)
 
+| Column | Meaning |
+|--------|---------|
+| `anonymous_id` | Cookie / visitor id (same person across clicks) |
+| `timestamp` | When the event happened |
+| `event_name` | Action type (`page_view`, `scroll`, `checkout_start`, …) |
+| `content_id` | Article / content key (used in near-duplicate check) |
+| `device_type` | Device at capture (`desktop`, `mobile`, `tablet`) |
+| `referrer` | How they arrived (often blank after the first hit) |
+
+No `session_id` yet — this example creates it.
+
 ```text
 anonymous_id           timestamp          event_name content_id device_type       referrer
        A0001 2026-01-10 10:00:00           page_view       C001     desktop organic_search

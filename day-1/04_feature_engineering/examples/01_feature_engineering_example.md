@@ -18,6 +18,14 @@ Source: `_shared/data/toy_sessions.csv`.
 
 ### INPUT (RAW)
 
+| Column | Meaning |
+|--------|---------|
+| `session_idx` | Visit id |
+| `anonymous_id` | Cookie — features will roll up to this key |
+| `timestamp` | Event time (drives duration / recency) |
+| `event_name` | Raw action (counted into rates; conversion flags outcomes) |
+| `stage` | Funnel tag (drives depth / furthest stage) |
+
 ```text
  session_idx anonymous_id           timestamp          event_name        stage
            1        A0001 2026-01-10 10:00:00           page_view      landing

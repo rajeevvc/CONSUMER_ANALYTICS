@@ -18,6 +18,14 @@ Source: `_shared/data/toy_sessions.csv`.
 
 ### INPUT (RAW)
 
+| Column | Meaning |
+|--------|---------|
+| `session_idx` | Visit id (`1`…`4` in the toy) |
+| `anonymous_id` | Cookie / visitor for that visit |
+| `timestamp` | When the event happened |
+| `event_name` | Raw action (`page_view`, `scroll`, …) |
+| `stage` | Funnel tag mapped from `event_name` (`landing`…`subscription`) |
+
 ```text
  session_idx anonymous_id           timestamp          event_name        stage
            1        A0001 2026-01-10 10:00:00           page_view      landing

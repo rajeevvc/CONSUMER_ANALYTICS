@@ -18,7 +18,17 @@ Source: `_shared/data/toy_sessions.csv`.
 
 ### INPUT (RAW)
 
-Stage sequence per session (conversions kept as stages; each visit ends at `exit`):
+Underlying columns from `_shared/data/toy_sessions.csv`:
+
+| Column | Meaning |
+|--------|---------|
+| `session_idx` | Visit id |
+| `anonymous_id` | Cookie / visitor |
+| `timestamp` | Event time (orders the sequence) |
+| `event_name` | Raw action |
+| `stage` | Funnel tag used as the Markov state |
+
+The example prints the **stage sequence** per session (conversions kept as stages; each visit ends at `exit`):
 
 ```text
   S1: landing → exit

@@ -18,7 +18,17 @@ Source: `_shared/data/toy_sessions.csv`.
 
 ### INPUT (RAW)
 
-Event-name path per session:
+Underlying columns from `_shared/data/toy_sessions.csv`:
+
+| Column | Meaning |
+|--------|---------|
+| `session_idx` | Visit id |
+| `anonymous_id` | Cookie / visitor |
+| `timestamp` | Event time (orders follows inside a visit) |
+| `event_name` | Raw action — this is the DFG node label |
+| `stage` | Funnel tag (not used for DFG edges; shown for context) |
+
+The example prints the **event-name path** per session:
 
 ```text
   S1: page_view
