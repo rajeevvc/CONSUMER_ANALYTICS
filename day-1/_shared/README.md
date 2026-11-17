@@ -10,8 +10,11 @@ It is **not** the full lab clickstream (`day-1/data/web_events.csv`). Think whit
 day-1/_shared/
 ├── README.md                 ← this file
 ├── generate_toy_data.py      ← rebuilds the CSVs
+├── generate_toy_data.ipynb
 ├── toy_raw_events.py         ← loader for sessionize
+├── toy_raw_events.ipynb
 ├── toy_sessions.py           ← loader for journey / HMM / features
+├── toy_sessions.ipynb
 └── data/
     ├── README.md
     ├── toy_raw_events.csv    ← raw clicks (no session yet)
@@ -22,9 +25,9 @@ day-1/_shared/
 | Piece | Role |
 |-------|------|
 | `data/*.csv` | The actual toy tables (what examples read) |
-| `generate_toy_data.py` | Source of truth → writes the three CSVs |
-| `toy_raw_events.py` | `load_raw_events()` + `describe_raw()` |
-| `toy_sessions.py` | `load_toy_events()` + stage map + `describe_sessions()` |
+| `generate_toy_data.py` / `.ipynb` | Source of truth → writes the three CSVs |
+| `toy_raw_events.py` / `.ipynb` | `load_raw_events()` + `describe_raw()` |
+| `toy_sessions.py` / `.ipynb` | `load_toy_events()` + stage map + `describe_sessions()` |
 
 ## Regenerate
 

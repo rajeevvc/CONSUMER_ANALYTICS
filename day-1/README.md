@@ -45,8 +45,9 @@ day-1/
 Each context folder holds:
 
 - `step0N_*.py` — full lab script  
+- `step0N_*.ipynb` — Jupyter notebook companion (runs the same `.py`)  
 - `step0N_*.md` — learner guide **with deep code walkthrough** (functions, constants, pipeline)  
-- `examples/` — toy demos (RAW → PROCESSED)  
+- `examples/` — toy demos (RAW → PROCESSED; each has `.py` + `.ipynb`)  
 - `README.md` — short folder index
 
 ## Pipeline order
