@@ -25,6 +25,79 @@ That script:
 3. Runs the sessions SQL → temp table `sessions`  
 4. Writes parquet outputs under `day-1/output/`
 
+### Query the output tables (Python)
+
+After Option A finishes, the durable tables are parquet files. Query them with DuckDB (or load into pandas):
+
+```python
+import duckdb
+
+EVENTS = "day-1/output/sessionized_events_sql.parquet"
+SESSIONS = "day-1/output/sessions_sql.parquet"
+
+con = duckdb.connect()
+
+# Row counts
+print(con.execute(f"SELECT count(*) AS n_events FROM read_parquet('{EVENTS}')").fetchdf())
+print(con.execute(f"SELECT count(*) AS n_sessions FROM read_parquet('{SESSIONS}')").fetchdf())
+print(
+    con.execute(
+        f"SELECT count(DISTINCT anonymous_id) AS n_cookies FROM read_parquet('{SESSIONS}')"
+    ).fetchdf()
+)
+
+# Peek at sessionized events
+print(
+    con.execute(
+        f"""
+        SELECT anonymous_id, timestamp, event_name, gap_seconds, session_id
+        FROM read_parquet('{EVENTS}')
+        ORDER BY anonymous_id, timestamp
+        LIMIT 20
+        """
+    ).fetchdf()
+)
+
+# Peek at session summaries
+print(
+    con.execute(
+        f"""
+        SELECT session_id, anonymous_id, session_start, session_end, n_events, n_content
+        FROM read_parquet('{SESSIONS}')
+        ORDER BY session_start
+        LIMIT 20
+        """
+    ).fetchdf()
+)
+
+# Example: sessions with the most events
+print(
+    con.execute(
+        f"""
+        SELECT session_id, anonymous_id, n_events, session_start, session_end
+        FROM read_parquet('{SESSIONS}')
+        ORDER BY n_events DESC
+        LIMIT 10
+        """
+    ).fetchdf()
+)
+
+# Optional: pandas
+events_df = con.execute(f"SELECT * FROM read_parquet('{EVENTS}')").fetchdf()
+sessions_df = con.execute(f"SELECT * FROM read_parquet('{SESSIONS}')").fetchdf()
+print(events_df.head())
+print(sessions_df.head())
+
+con.close()
+```
+
+Output columns to expect:
+
+| File | Useful columns |
+|------|----------------|
+| `sessionized_events_sql.parquet` | `anonymous_id`, `timestamp`, `event_name`, `gap_seconds`, `session_idx`, `session_id` |
+| `sessions_sql.parquet` | `session_id`, `anonymous_id`, `session_start`, `session_end`, `n_events`, `n_content` |
+
 ### Option B — Python that calls the same SQL
 
 ```python
