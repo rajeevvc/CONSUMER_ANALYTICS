@@ -10,11 +10,192 @@ Difference: the heavy lifting is **SQL over Parquet** in DuckDB — useful if yo
 
 ## How to run
 
+### Option A — Python script (recommended)
+
+From the repo root (needs `duckdb`; uses `web_events.parquet`, or builds it once from CSV):
+
 ```bash
 python day-1/01_sessionize/step01b_sessionize_duckdb_sql.py
 ```
 
-Needs `duckdb`. Uses `web_events.parquet`, or builds it once from CSV.
+That script:
+
+1. Ensures `day-1/data/web_events.parquet` exists  
+2. Runs the sessionize SQL → temp table `sessionized_events`  
+3. Runs the sessions SQL → temp table `sessions`  
+4. Writes parquet outputs under `day-1/output/`
+
+### Option B — Python that calls the same SQL
+
+```python
+import sys
+import duckdb
+
+sys.path.insert(0, "day-1/01_sessionize")
+from step01b_sessionize_duckdb_sql import (
+    SESSIONIZE_SQL,
+    SESSIONS_SQL,
+    ensure_web_events_parquet,
+    DUPLICATE_GAP_SECONDS,
+    SESSION_GAP_SECONDS,
+    OUTPUT,
+)
+
+con = duckdb.connect()
+parquet_path = ensure_web_events_parquet(con)
+OUTPUT.mkdir(parents=True, exist_ok=True)
+
+con.execute(
+    "CREATE OR REPLACE TEMP TABLE sessionized_events AS " + SESSIONIZE_SQL,
+    [str(parquet_path), DUPLICATE_GAP_SECONDS, SESSION_GAP_SECONDS],
+)
+con.execute("CREATE OR REPLACE TEMP TABLE sessions AS " + SESSIONS_SQL)
+
+events_out = (OUTPUT / "sessionized_events_sql.parquet").as_posix()
+sessions_out = (OUTPUT / "sessions_sql.parquet").as_posix()
+con.execute(f"COPY sessionized_events TO '{events_out}' (FORMAT PARQUET, COMPRESSION ZSTD)")
+con.execute(f"COPY sessions TO '{sessions_out}' (FORMAT PARQUET, COMPRESSION ZSTD)")
+
+print(con.execute("SELECT count(*) FROM sessionized_events").fetchone())
+print(con.execute("SELECT count(*) FROM sessions").fetchone())
+con.close()
+```
+
+Parameter bind order for `SESSIONIZE_SQL`:
+
+1. path to `web_events.parquet`  
+2. `DUPLICATE_GAP_SECONDS` (2)  
+3. `SESSION_GAP_SECONDS` (1800)
+
+### Option C — SQL queries to run in DuckDB
+
+Replace `'day-1/data/web_events.parquet'` with your path. Use `2` for the duplicate window and `1800` for the 30‑minute gap.
+
+**1. Sessionize events** (creates one row per event + `session_id`):
+
+```sql
+CREATE OR REPLACE TEMP TABLE sessionized_events AS
+WITH raw AS (
+    SELECT
+        anonymous_id,
+        CAST(timestamp AS TIMESTAMP) AS timestamp,
+        event_name,
+        content_id,
+        device_type,
+        referrer
+    FROM read_parquet('day-1/data/web_events.parquet')
+    WHERE anonymous_id IS NOT NULL
+      AND timestamp IS NOT NULL
+      AND event_name IS NOT NULL
+),
+
+-- prior event for near-duplicate detection
+ordered AS (
+    SELECT
+        *,
+        lag(timestamp) OVER w AS prev_ts,
+        lag(event_name) OVER w AS prev_event,
+        lag(COALESCE(CAST(content_id AS VARCHAR), '')) OVER w AS prev_content
+    FROM raw
+    WINDOW w AS (PARTITION BY anonymous_id ORDER BY timestamp, event_name)
+),
+
+-- drop near-duplicates (same event + content within 2 seconds)
+deduped AS (
+    SELECT
+        anonymous_id,
+        timestamp,
+        event_name,
+        content_id,
+        device_type,
+        referrer
+    FROM ordered
+    WHERE NOT (
+        prev_ts IS NOT NULL
+        AND event_name = prev_event
+        AND COALESCE(CAST(content_id AS VARCHAR), '') = prev_content
+        AND date_diff('second', prev_ts, timestamp) <= 2
+    )
+),
+
+-- gap to previous kept event
+with_gap AS (
+    SELECT
+        *,
+        lag(timestamp) OVER w AS prev_event_ts,
+        date_diff('second', lag(timestamp) OVER w, timestamp) AS gap_seconds
+    FROM deduped
+    WINDOW w AS (PARTITION BY anonymous_id ORDER BY timestamp, event_name)
+),
+
+-- new session when first event for cookie OR idle > 30 minutes
+flagged AS (
+    SELECT
+        *,
+        CASE
+            WHEN prev_event_ts IS NULL OR gap_seconds > 1800 THEN 1
+            ELSE 0
+        END AS new_session
+    FROM with_gap
+)
+
+SELECT
+    anonymous_id,
+    timestamp,
+    event_name,
+    content_id,
+    device_type,
+    referrer,
+    gap_seconds,
+    SUM(new_session) OVER (
+        ORDER BY anonymous_id, timestamp, event_name
+        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    )::BIGINT AS session_idx,
+    'S' || lpad(
+        CAST(
+            SUM(new_session) OVER (
+                ORDER BY anonymous_id, timestamp, event_name
+                ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+            ) AS VARCHAR
+        ),
+        9,
+        '0'
+    ) AS session_id
+FROM flagged
+ORDER BY anonymous_id, timestamp, event_name;
+```
+
+**2. Session summaries** (one row per visit):
+
+```sql
+CREATE OR REPLACE TEMP TABLE sessions AS
+SELECT
+    session_idx,
+    ANY_VALUE(session_id) AS session_id,
+    ANY_VALUE(anonymous_id) AS anonymous_id,
+    MIN(timestamp) AS session_start,
+    MAX(timestamp) AS session_end,
+    arg_min(device_type, timestamp) AS device_type,
+    arg_min(referrer, timestamp) AS referrer,
+    COUNT(*)::BIGINT AS n_events,
+    COUNT(DISTINCT content_id)::BIGINT AS n_content
+FROM sessionized_events
+GROUP BY session_idx
+ORDER BY session_idx;
+```
+
+**3. Optional checks / export:**
+
+```sql
+SELECT count(*) AS n_events FROM sessionized_events;
+SELECT count(*) AS n_sessions FROM sessions;
+SELECT count(DISTINCT anonymous_id) AS n_cookies FROM sessions;
+
+COPY sessionized_events TO 'day-1/output/sessionized_events_sql.parquet'
+    (FORMAT PARQUET, COMPRESSION ZSTD);
+COPY sessions TO 'day-1/output/sessions_sql.parquet'
+    (FORMAT PARQUET, COMPRESSION ZSTD);
+```
 
 ## Input / Output
 
