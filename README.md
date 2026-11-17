@@ -67,6 +67,33 @@ Shared toy loaders for examples: [`day-1/_shared/`](day-1/_shared/).
 cd /path/to/CONSUMERANALYTICS
 ```
 
+### Install dependencies (`.venv` or conda)
+
+**Option A — Python venv + pip**
+
+```bash
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+**Option B — conda + pip** (same `requirements.txt`)
+
+```bash
+conda create -n consumeranalytics python=3.11 -y
+conda activate consumeranalytics
+pip install -r requirements.txt
+```
+
+**Option C — conda from `environment.yml`**
+
+```bash
+conda env create -f environment.yml
+conda activate consumeranalytics
+```
+
+Packages: `numpy`, `pandas`, `scikit-learn`, `hmmlearn`, `duckdb`.
+
 ### Clone / pull lab data (Git LFS)
 
 Large clickstreams live in `day-1/data/` via **Git LFS**. After clone (or if data files look like tiny pointer text):

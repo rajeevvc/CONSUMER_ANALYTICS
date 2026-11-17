@@ -1,0 +1,6 @@
+# Day 1 lab + examples (pip / .venv / conda+pip)
+numpy>=1.24
+pandas>=2.0
+scikit-learn>=1.3
+hmmlearn>=0.3.0
+duckdb>=0.9.0

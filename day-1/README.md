@@ -8,6 +8,19 @@ Lean learner guides for each implementation. Work **in order**.
 cd /path/to/CONSUMERANALYTICS
 ```
 
+Install deps once (see root [`requirements.txt`](../requirements.txt)):
+
+```bash
+# .venv
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+
+# or conda
+conda create -n consumeranalytics python=3.11 -y
+conda activate consumeranalytics
+pip install -r requirements.txt
+```
+
 Raw data lives in `day-1/data/` (large files via **Git LFS**). Outputs go to `day-1/output/`.
 
 ```bash

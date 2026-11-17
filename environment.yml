@@ -1,0 +1,15 @@
+# Optional conda env for this lab
+#   conda env create -f environment.yml
+#   conda activate consumeranalytics
+name: consumeranalytics
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.10
+  - numpy>=1.24
+  - pandas>=2.0
+  - scikit-learn>=1.3
+  - duckdb>=0.9.0
+  - pip
+  - pip:
+      - hmmlearn>=0.3.0
